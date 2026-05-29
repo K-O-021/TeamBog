@@ -1,0 +1,16 @@
+/* App global styles - minimal reset */
+
+body {
+	background: #fff;
+	color: #181c32;
+}
+
+.royal-blue {
+	--primary: 0 100% 50%; /* Pure Royal Blue: #0050ff */
+	--primary-foreground: 0 0% 100%;
+}
+
+.bigger-layout {
+	max-width: 95vw !important;
+	font-size: 1.15rem;
+}

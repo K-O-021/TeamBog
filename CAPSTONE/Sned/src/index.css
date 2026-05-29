@@ -1,0 +1,151 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 230 20% 10%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 230 20% 10%;
+
+    --primary: 227 100% 50%; /* Pure Royal Blue: #0050ff */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 230 40% 98%;
+    --secondary-foreground: 230 20% 10%;
+
+    --muted: 230 20% 98%;
+    --muted-foreground: 230 10% 40%;
+
+    --accent: 227 100% 90%;
+    --accent-foreground: 230 20% 10%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 210 40% 98%;
+    --ring: 227 100% 55%;
+    --border: 230 20% 90%;
+    --input: 230 20% 90%;
+
+    --radius: 1rem;
+
+    --success: 160 45% 45%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 80% 55%;
+    --warning-foreground: 30 60% 20%;
+    --info: 200 70% 55%;
+    --info-foreground: 0 0% 100%;
+    --sidebar-foreground: 230 20% 10%;
+    --sidebar-primary: 227 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 227 100% 90%;
+    --sidebar-accent-foreground: 230 20% 10%;
+    --sidebar-border: 230 20% 90%;
+    --sidebar-ring: 227 100% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Times New Roman', Times, serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Times New Roman', Times, serif;
+    @apply font-bold tracking-tight;
+  }
+}
+
+@layer utilities {
+  .card-elevated {
+    @apply bg-card rounded-2xl border-2 border-border shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300;
+  }
+
+  .glass-morphism {
+    @apply bg-white/70 backdrop-blur-xl border border-white/20 shadow-2xl;
+  }
+
+  .bento-grid {
+    @apply grid grid-cols-1 md:grid-cols-12 gap-4 auto-rows-[minmax(180px,auto)];
+  }
+
+  .status-low {
+    @apply bg-emerald-50 text-emerald-700 border border-emerald-200;
+  }
+  .status-moderate {
+    @apply bg-amber-50 text-amber-700 border border-amber-200;
+  }
+  .status-high {
+    @apply bg-red-50 text-red-700 border border-red-200;
+  }
+  .status-positive {
+    @apply bg-emerald-50 text-emerald-700 border border-emerald-200;
+  }
+  .status-concerning {
+    @apply bg-red-50 text-red-700 border border-red-200;
+  }
+  .status-attention {
+    @apply bg-amber-50 text-amber-700 border border-amber-200;
+  }
+
+  @media print {
+    @page {
+      size: auto;
+      margin: 15mm 20mm; /* Standard professional margins */
+    }
+
+    body {
+      background: white !important;
+      /* Force background colors to print (royal blue theme) */
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    /* Hide navigation elements and the action buttons container */
+    header, aside, .no-print {
+      display: none !important;
+    }
+
+    /* Layout resets */
+    main {
+      @apply m-0 p-0 !important;
+      display: block !important;
+    }
+
+    /* Ensure cards and charts don't split across pages */
+    .card-elevated, 
+    .recharts-responsive-container {
+      break-inside: avoid;
+      page-break-inside: avoid;
+      box-shadow: none !important;
+      border: 1px solid #e2e8f0 !important;
+      margin-bottom: 1.5rem;
+    }
+
+    /* Increase font sizes slightly for readability on paper */
+    h2 { font-size: 1.5rem !important; }
+    p, span { font-size: 10pt !important; }
+    
+    .text-primary { color: #0050ff !important; }
+  }
+}
+
+/* Styles moved from AdminAnalytics.tsx */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 0px;
+}
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out forwards;
+}

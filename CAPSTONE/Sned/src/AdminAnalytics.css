@@ -1,0 +1,217 @@
+:root {
+    --primary-olive: #4A5D4E;
+    --moss-green: #7D8F69;
+    --sage-green: #A7BEA9;
+    --cream-bg: #FAF9F6;
+    --glass-white: rgba(255, 255, 255, 0.45);
+    --text-main: #2D362E;
+    --text-muted: #6B726C;
+    --radius: 24px;
+    --shadow: 0 8px 32px 0 rgba(74, 93, 78, 0.1);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: 'Inter', system-ui, sans-serif;
+    background-color: var(--cream-bg) !important;
+    color: var(--text-main);
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Sidebar Styles */
+.sidebar {
+    width: 80px;
+    background: white;
+    border-right: 1px solid rgba(0,0,0,0.05);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem 0;
+}
+
+.logo {
+    font-weight: 900;
+    font-size: 1.2rem;
+    color: var(--primary-olive);
+    margin-bottom: 3rem;
+}
+
+.menu-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.menu-item {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    margin-bottom: 1.5rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.menu-item:hover:not(.active) {
+    background: rgba(74, 93, 78, 0.1);
+    color: var(--primary-olive);
+}
+
+.menu-item.active {
+    background: var(--primary-olive);
+    color: white;
+}
+
+/* Main Content & Header */
+.main-content {
+    flex: 1;
+    padding: 2rem 3rem;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3rem;
+}
+
+.search-bar input {
+    background: var(--glass-white);
+    border: 1px solid rgba(255,255,255,0.6);
+    padding: 0.8rem 1.5rem;
+    border-radius: 50px;
+    width: 300px;
+    backdrop-filter: blur(8px);
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    background: var(--moss-green);
+    border-radius: 50%;
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 10px;
+}
+
+/* Grid System */
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 1.5rem;
+}
+
+/* Card Base & Glassmorphism */
+.card {
+    background: rgba(255, 255, 255, 0.7) !important;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+}
+
+.card:hover {
+    transform: translateY(-4px);
+    transition: transform 0.3s ease;
+}
+
+.tile .metric {
+    display: block;
+    font-size: 2rem;
+    font-weight: 700;
+    margin-top: 0.5rem;
+}
+
+.metric.highlight { color: var(--moss-green); }
+
+/* Analytics & Components */
+.bar-chart {
+    height: 200px;
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    padding: 1rem 0;
+}
+
+.bar {
+    flex: 1;
+    background: var(--primary-olive);
+    border-radius: 8px 8px 0 0;
+    transition: height 0.5s ease;
+}
+
+.organic-pattern {
+    background-image: radial-gradient(at 0% 0%, rgba(167, 190, 169, 0.15) 0px, transparent 50%),
+                      radial-gradient(at 100% 100%, rgba(125, 143, 105, 0.1) 0px, transparent 50%);
+}
+
+.team-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.small-avatar {
+    width: 32px;
+    height: 32px;
+    background: #ddd;
+    border-radius: 50%;
+    margin-right: 12px;
+    background: var(--sage-green);
+}
+
+.info .name { font-weight: 600; display: block; }
+.info .role { font-size: 0.85rem; color: var(--text-muted); }
+
+/* Gauge Implementation */
+.gauge-container {
+    position: relative;
+    width: 160px;
+    height: 80px;
+    overflow: hidden;
+    margin: 1.5rem auto 0;
+    display: flex;
+    justify-content: center;
+    align-items: flex-end;
+}
+
+.semi-circle {
+    position: absolute;
+    top: 0;
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    background: conic-gradient(from 270deg, var(--moss-green) 0deg, var(--moss-green) calc(var(--progress) * 1.8deg), var(--sage-green) calc(var(--progress) * 1.8deg));
+    -webkit-mask: radial-gradient(circle at center, transparent 65%, black 66%);
+    mask: radial-gradient(circle at center, transparent 65%, black 66%);
+}
+
+.gauge-value {
+    font-weight: 700;
+    font-size: 1.2rem;
+    z-index: 2;
+}

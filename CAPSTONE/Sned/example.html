@@ -1,0 +1,1072 @@
+  import React, { useState, useEffect } from "react";
+  import { useNavigate } from "react-router-dom";
+  import { useApp } from "@/context/AppContext";
+
+  // ── Maroon + Gold + Cream palette ──────────────────────────────────────────
+  const M = {
+    maroon:     "#7B1C2A",
+    maroonDark: "#5A1220",
+    maroonDeep: "#3D0C18",
+    maroonLight:"#F7ECEE",
+    maroonMid:  "#9B2335",
+    maroonPale: "#FDF5F6",
+    gold:       "#C49A3C",
+    goldLight:  "#FAF3E0",
+    cream:      "#FBF7F2",
+    white:      "#FFFFFF",
+    g50:        "#FAF8F8",
+    g100:       "#F0EAEA",
+    g200:       "#D9CECE",
+    g400:       "#A89090",
+    g500:       "#7A6060",
+    g600:       "#5A4040",
+    g700:       "#3A2828",
+    g800:       "#1E1010",
+    red:        "#C0392B", redLight: "#FDECEA",
+    amber:      "#B8860B", amberLight: "#FEF9E7",
+    sky:        "#1A6B8A", skyLight:   "#E8F4F8",
+    purple:     "#6C3483", purpleLight:"#F4ECF7",
+  };
+
+  const TNR = `'Times New Roman', Times, serif`;
+
+  // ── Icon set (modern SVG) ──────────────────────────────────────────────────
+  type IconName = 'home' | 'users' | 'bell' | 'plus' | 'search' | 'check' | 'alert' | 'chart' | 'brain' | 'shield' | 'file' | 'logout' | 'arrow' | 'clock' | 'star' | 'target' | 'eye' | 'send' | 'activity' | 'download' | 'x' | 'menu' | 'info' | 'grid' | 'save' | 'zap';
+
+  interface IconProps {
+    name: IconName;
+    size?: number;
+    color?: string;
+  }
+
+  const Icon: React.FC<IconProps> = ({ name, size = 16, color = "currentColor" }) => {
+    const icons: Record<IconName, React.ReactNode> = {
+      home: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9.5L12 3l9 6.5V20a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"/><path d="M9 21V12h6v9"/></svg>,
+      users: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="7" r="4"/><path d="M2 21v-2a4 4 0 014-4h6a4 4 0 014 4v2"/><path d="M19 8a3 3 0 110 6"/><path d="M22 21v-2a3 3 0 00-2-2.83"/></svg>,
+      bell: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>,
+      plus: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>,
+      search: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.35-4.35"/></svg>,
+      check: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>,
+      alert: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>,
+      chart: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
+      brain: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9.5 2a4 4 0 00-4 4.5 4 4 0 000 7A4 4 0 009.5 22h5a4 4 0 004-4.5 4 4 0 000-7A4 4 0 0014.5 2h-5z"/><path d="M12 6v12M8 9l4-3 4 3M8 15l4 3 4-3"/></svg>,
+      shield: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
+      file: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>,
+      logout: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>,
+      arrow: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>,
+      clock: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
+      star: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>,
+      target: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,
+      eye: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>,
+      send: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>,
+      activity: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>,
+      download: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>,
+      x: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>,
+      menu: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>,
+      info: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>,
+      grid: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>,
+      save: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>,
+      zap: <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
+    };
+    return icons[name] || null;
+  };
+
+  interface BehaviorCategory {
+    label: string;
+    desc: string;
+    type: 'positive' | 'negative';
+  }
+
+  const BEHAVIOR_CATEGORIES: BehaviorCategory[] = [
+    { label: "Self-Regulation", desc: "Manage emotions and behavior.", type: "positive" },
+    { label: "Sensory Management", desc: "Handling sensory inputs effectively.", type: "positive" },
+    { label: "Safe Behavior", desc: "Protecting oneself and others.", type: "positive" },
+    { label: "Social Engagement", desc: "Positive social participation.", type: "positive" },
+    { label: "Flexible Thinking", desc: "Changing perspectives.", type: "positive" },
+    { label: "Functional Communication", desc: "Using language effectively.", type: "positive" },
+    { label: "Smooth Transitions", desc: "Moving between activities.", type: "positive" },
+    { label: "Sustained Attention", desc: "Staying focused on tasks.", type: "positive" },
+    { label: "Task Completion", desc: "Finishing assigned activities.", type: "positive" },
+    { label: "Emotional Regulation", desc: "Managing feelings appropriately.", type: "positive" },
+    { label: "Task Independence", desc: "Completing activities independently.", type: "positive" },
+    { label: "Good Decision-Making", desc: "Choosing safe and helpful actions.", type: "positive" },
+    { label: "Clear Communication", desc: "Expressing ideas clearly.", type: "positive" },
+    { label: "Stimming", desc: "Repetitive self-stimulation movements.", type: "negative" },
+    { label: "Sensory Overload", desc: "Overwhelmed by environment.", type: "negative" },
+    { label: "Self-Harm", desc: "Intentional physical injury.", type: "negative" },
+    { label: "Social Difficulty", desc: "Challenges in social interaction.", type: "negative" },
+    { label: "Echolalia", desc: "Repeating others' words.", type: "negative" },
+    { label: "Inattention", desc: "Difficulty staying focused.", type: "negative" },
+    { label: "Hyperactivity", desc: "Excessive physical movement.", type: "negative" },
+    { label: "Impulsivity", desc: "Acting without thinking.", type: "negative" },
+    { label: "Emotional Outbursts", desc: "Sudden intense reactions.", type: "negative" },
+    { label: "Aggression", desc: "Hostile actions toward others.", type: "negative" },
+    { label: "Wandering", desc: "Leaving safe area without permission.", type: "negative" },
+    { label: "Forgetfulness", desc: "Forgetting steps in routines.", type: "negative" },
+    { label: "Destructive Behavior", desc: "Intentionally damaging property.", type: "negative" },
+  ];
+
+  interface Student {
+    id: number;
+    name: string;
+    section: string;
+    initials: string;
+    risk: 'low' | 'moderate' | 'critical';
+  }
+
+  const students: Student[] = [
+    { id: 1, name: "Juan Dela Cruz", section: "3-F", initials: "JD", risk: "moderate" },
+    { id: 2, name: "Anna Santos", section: "3-F", initials: "AS", risk: "low" },
+    { id: 3, name: "Luis Mendoza", section: "3-F", initials: "LM", risk: "low" },
+    { id: 4, name: "Maria Cruz", section: "3-F", initials: "MC", risk: "critical" },
+    { id: 5, name: "Rafael Perez", section: "3-F", initials: "RP", risk: "moderate" },
+    { id: 6, name: "Karla Bautista", section: "3-F", initials: "KB", risk: "low" },
+  ];
+
+  interface ReportType {
+    id: string;
+    icon: IconName;
+    title: string;
+    desc: string;
+    color: string;
+    tags: string[];
+  }
+
+  const REPORT_TYPES: ReportType[] = [
+    { id: "behavioral_progress", icon: "chart", title: "Behavioral Progress Report", desc: "Behavior summary, mood patterns, incident trends.", color: M.maroon, tags: ["Primary"] },
+    { id: "intervention_recommendation", icon: "target", title: "Intervention Recommendation", desc: "AI-detected concerns with suggested interventions.", color: M.sky, tags: ["AI-Generated"] },
+    { id: "risk_classification", icon: "shield", title: "Risk Classification Report", desc: "Risk level, classification basis, and XAI explanation.", color: M.amber, tags: ["XAI"] },
+    { id: "anomaly_detection", icon: "eye", title: "Anomaly Detection Report", desc: "Unusual behavior changes and identified triggers.", color: M.purple, tags: ["Anomaly"] },
+    { id: "predictive_alert", icon: "zap", title: "Predictive Alert Report", desc: "Predicted behavioral concerns and preventive actions.", color: M.red, tags: ["Early Warning"] },
+    { id: "parent_teacher", icon: "send", title: "Parent-Teacher Communication", desc: "Teacher updates and meeting summaries.", color: M.maroon, tags: ["Collaboration"] },
+    { id: "behavioral_summary", icon: "file", title: "Student Behavioral Summary", desc: "Overall behavioral status and improvement indicators.", color: M.maroonDark, tags: ["Admin"] },
+    { id: "competency_analytics", icon: "activity", title: "Competency Analytics Report", desc: "Social, emotional, and adaptive behavior analytics.", color: M.g700, tags: ["Analytics"] },
+  ];
+
+  const STEPS = [
+    { num: 1, label: "Student" }, { num: 2, label: "Log" },
+    { num: 3, label: "Save" }, { num: 4, label: "AI" },
+    { num: 5, label: "Risk" }, { num: 6, label: "Alerts" },
+    { num: 7, label: "Analytics" }, { num: 8, label: "Reports" },
+  ];
+
+  // ── Primitives ─────────────────────────────────────────────────────────────
+
+  interface AvProps { initials: string; size?: number; }
+  const Av: React.FC<AvProps> = ({ initials, size = 36 }) => (
+    <div style={{ width: size, height: size, borderRadius: "50%", background: `linear-gradient(135deg, ${M.maroon}, ${M.maroonDark})`, color: M.white, fontWeight: 700, fontSize: size * 0.35, fontFamily: TNR, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, boxShadow: `0 2px 8px ${M.maroon}40` }}>{initials}</div>
+  );
+
+  interface TagProps { children: React.ReactNode; color?: string; }
+  const Tag: React.FC<TagProps> = ({ children, color = M.maroon }) => (
+    <span style={{ background: color + "15", color, fontSize: 10, fontWeight: 600, padding: "2px 8px", borderRadius: 4, fontFamily: TNR, letterSpacing: 0.3, border: `1px solid ${color}25` }}>{children}</span>
+  );
+
+  interface CardProps { children: React.ReactNode; style?: React.CSSProperties; }
+  const Card: React.FC<CardProps> = ({ children, style = {} }) => (
+    <div style={{ background: M.white, border: `1px solid ${M.g200}`, borderRadius: 10, padding: 16, boxShadow: "0 1px 4px rgba(123,28,42,0.06)", ...style }}>{children}</div>
+  );
+
+  interface BtnProps {
+    children: React.ReactNode;
+    onClick?: () => void;
+    variant?: "primary" | "secondary" | "ghost" | "gold";
+    style?: React.CSSProperties;
+    disabled?: boolean;
+  }
+
+  const Btn: React.FC<BtnProps> = ({ children, onClick, variant = "primary", style = {}, disabled = false }) => {
+    const v = {
+      primary: { background: `linear-gradient(135deg, ${M.maroon}, ${M.maroonDark})`, color: M.white, border: "none", boxShadow: `0 3px 10px ${M.maroon}40` },
+      secondary: { background: M.white, color: M.g700, border: `1px solid ${M.g200}` },
+      ghost: { background: M.maroonLight, color: M.maroon, border: `1px solid ${M.maroon}25` },
+      gold: { background: `linear-gradient(135deg, ${M.gold}, #A07830)`, color: M.white, border: "none", boxShadow: `0 3px 10px ${M.gold}40` },
+    };
+    return (
+      <button onClick={onClick} disabled={disabled} style={{ ...v[variant], borderRadius: 7, padding: "9px 18px", fontSize: 13, fontWeight: 600, fontFamily: TNR, cursor: disabled ? "not-allowed" : "pointer", display: "inline-flex", alignItems: "center", gap: 7, opacity: disabled ? 0.5 : 1, transition: "all 0.15s", ...style }}>{children}</button>
+    );
+  };
+
+  interface PBarProps { val: number; max?: number; color?: string; h?: number; }
+  const PBar: React.FC<PBarProps> = ({ val, max = 100, color = M.maroon, h = 5 }) => (
+    <div style={{ height: h, borderRadius: h, background: M.g100, overflow: "hidden" }}>
+      <div style={{ height: "100%", width: `${(val / max) * 100}%`, background: color, borderRadius: h, transition: "width 0.5s" }} />
+    </div>
+  );
+
+  interface STitleProps { step?: number; total?: number; title: string; sub?: string; }
+  const STitle: React.FC<STitleProps> = ({ step, total, title, sub }) => (
+    <div style={{ marginBottom: 20 }}>
+      {step && <div style={{ fontSize: 10, fontWeight: 600, color: M.gold, letterSpacing: 1.5, marginBottom: 3, textTransform: "uppercase", fontFamily: TNR }}>Step {step} of {total}</div>}
+      <h2 style={{ fontSize: 18, fontWeight: 700, color: M.maroonDeep, margin: "0 0 4px", fontFamily: TNR, fontStyle: "italic" }}>{title}</h2>
+      {sub && <p style={{ fontSize: 12, color: M.g500, margin: 0, fontFamily: TNR }}>{sub}</p>}
+    </div>
+  );
+
+  const inputStyle: React.CSSProperties = { width: "100%", padding: "9px 12px", border: `1px solid ${M.g200}`, borderRadius: 7, fontSize: 13, fontFamily: TNR, outline: "none", boxSizing: "border-box", color: M.g800, background: M.white };
+
+  // ── Top Bar ────────────────────────────────────────────────────────────────
+
+  interface TopBarProps {
+    onLogout: () => void;
+    onHome: () => void;
+  }
+
+  const TopBar: React.FC<TopBarProps> = ({ onLogout, onHome }) => {
+    return (
+      <header style={{ height: 54, background: `linear-gradient(135deg, ${M.maroonDeep}, ${M.maroon})`, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", flexShrink: 0, boxShadow: `0 2px 12px ${M.maroonDeep}60`, position: "relative", zIndex: 10 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <button onClick={onHome} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 10 }}>
+            <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Icon name="grid" size={16} color={M.white} />
+            </div>
+            <div>
+              <div style={{ fontWeight: 800, fontSize: 14, color: M.white, fontFamily: TNR, fontStyle: "italic" as const, letterSpacing: 0.5 }}>SNED-<span style={{ color: M.gold }}>LINK+</span></div>
+              <div style={{ fontSize: 9, color: "rgba(255,255,255,0.55)", letterSpacing: 1, textTransform: "uppercase", fontFamily: TNR }}>Special Needs Education</div>
+            </div>
+          </button>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <button style={{ width: 34, height: 34, background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Icon name="plus" size={16} color="rgba(255,255,255,0.8)" />
+          </button>
+          <div style={{ position: "relative" }}>
+            <button style={{ width: 34, height: 34, background: "rgba(255,255,255,0.1)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <Icon name="bell" size={16} color="rgba(255,255,255,0.8)" />
+            </button>
+            <span style={{ position: "absolute", top: -3, right: -3, width: 14, height: 14, background: M.gold, borderRadius: "50%", fontSize: 8, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", color: M.white, fontFamily: TNR }}>3</span>
+          </div>
+          <div style={{ width: 1, height: 24, background: "rgba(255,255,255,0.2)" }} />
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <Av initials="MS" size={30} />
+            <div>
+              <div style={{ fontSize: 11, fontWeight: 700, color: M.white, fontFamily: TNR }}>Mrs. Santos</div>
+              <div style={{ fontSize: 9, color: "rgba(255,255,255,0.55)", fontFamily: TNR }}>Math · Grade 7</div>
+            </div>
+          </div>
+          <button onClick={onLogout} style={{ width: 34, height: 34, background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 8, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <Icon name="logout" size={15} color="rgba(255,255,255,0.7)" />
+          </button>
+        </div>
+      </header>
+    );
+  }
+
+  // ── Step Bar ───────────────────────────────────────────────────────────────
+
+  const StepBar: React.FC<{ current: number }> = ({ current }) => {
+    return (
+      <div style={{ background: M.white, borderBottom: `1px solid ${M.g200}`, padding: "10px 24px", display: "flex", alignItems: "center", flexShrink: 0, overflowX: "auto" }}>
+        {STEPS.map((s, i) => (
+          <div key={s.num} style={{ display: "flex", alignItems: "center", flex: 1, minWidth: 0 }}>
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3 }}>
+              <div style={{ width: 24, height: 24, borderRadius: "50%", background: s.num < current ? M.maroon : s.num === current ? `linear-gradient(135deg, ${M.maroon}, ${M.maroonDark})` : M.g100, color: s.num <= current ? M.white : M.g400, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 10, fontFamily: TNR, boxShadow: s.num === current ? `0 2px 8px ${M.maroon}50` : "none" }}>
+                {s.num < current ? <Icon name="check" size={12} color={M.white} /> : s.num}
+              </div>
+              <div style={{ fontSize: 8, fontWeight: s.num === current ? 700 : 400, color: s.num === current ? M.maroon : s.num < current ? M.maroonDark : M.g400, whiteSpace: "nowrap", textTransform: "uppercase", letterSpacing: 0.5, fontFamily: TNR }}>{s.label}</div>
+            </div>
+            {i < STEPS.length - 1 && <div style={{ flex: 1, height: 1.5, marginBottom: 12, background: s.num < current ? M.maroon : M.g200 }} />}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // ── Dashboard ──────────────────────────────────────────────────────────────
+
+  const Dashboard: React.FC<{ onStart: () => void }> = ({ onStart }) => {
+    const { iepRequests = [], updateIEPRequest } = useApp(); // Keep updateIEPRequest for direct actions
+    const navigate = useNavigate(); // Import useNavigate here
+    const riskColor: Record<string, string> = { critical: M.red, moderate: M.amber, low: M.maroon };
+    
+    const stats: { label: string; val: string; icon: IconName; color: string }[] = [
+      { label: "Students", val: "38", icon: "users", color: M.maroon },
+      { label: "Logs Today", val: "12", icon: "check", color: M.maroon },
+      { label: "Pending", val: "3", icon: "clock", color: M.amber },
+      { label: "Alerts", val: "2", icon: "alert", color: M.red },
+    ];
+
+    return (
+      <div style={{ padding: "20px 24px", maxWidth: 900, margin: "0 auto" }}>
+        {/* Compact header */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+          <div>
+            <h1 style={{ fontSize: 17, fontWeight: 700, color: M.maroonDeep, margin: "0 0 2px", fontFamily: TNR, fontStyle: "italic" }}>Welcome back, Mrs. Santos</h1>
+            <p style={{ fontSize: 11, color: M.g400, margin: 0, fontFamily: TNR }}>Math · Grade 7 Section 3-F · May 24, 2025</p>
+          </div>
+          <Btn onClick={onStart}>
+            <Icon name="file" size={14} color={M.white} /> Start Activity Log
+          </Btn>
+        </div>
+
+        {/* Stats row — compact */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 10, marginBottom: 16 }}>
+          {stats.map(s => (
+            <div key={s.label} style={{ background: M.white, border: `1px solid ${M.g200}`, borderRadius: 9, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10, boxShadow: "0 1px 4px rgba(123,28,42,0.05)" }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: s.color + "12", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <Icon name={s.icon} size={15} color={s.color} />
+              </div>
+              <div>
+                <div style={{ fontSize: 17, fontWeight: 700, color: M.g800, fontFamily: TNR }}>{s.val}</div>
+                <div style={{ fontSize: 9, color: M.g400, textTransform: "uppercase" as const, letterSpacing: 0.5, fontFamily: TNR }}>{s.label}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: 14, marginBottom: 16 }}>
+          {/* Needs attention */}
+          <Card>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
+              <Icon name="alert" size={14} color={M.maroon} />
+              <span style={{ fontSize: 11, fontWeight: 700, color: M.g500, textTransform: "uppercase", letterSpacing: 0.8, fontFamily: TNR }}>Needs Attention</span>
+            </div>
+            {( [
+              { name: "Maria Cruz", risk: "critical", trend: "↑ Aggressive" },
+              { name: "Juan Dela Cruz", risk: "moderate", trend: "↑ Inattentive" },
+              { name: "Rafael Perez", risk: "moderate", trend: "↓ Participation" },
+            ] as const ).map(s => (
+              <div key={s.name} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "7px 0", borderBottom: `1px solid ${M.g100}` }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ width: 6, height: 6, borderRadius: "50%", background: riskColor[s.risk], flexShrink: 0 }} />
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: M.g800, fontFamily: TNR }}>{s.name}</div>
+                    <div style={{ fontSize: 10, color: M.g400, fontFamily: TNR }}>{s.trend}</div>
+                  </div>
+                </div>
+                <Tag color={riskColor[s.risk] as string}>{s.risk.toUpperCase()}</Tag>
+              </div>
+            ))}
+          </Card>
+
+          {/* IEP Requests card */}
+          <Card>
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
+              <Icon name="file" size={14} color={M.maroon} />
+              <span style={{ fontSize: 11, fontWeight: 700, color: M.g500, textTransform: "uppercase", letterSpacing: 0.8, fontFamily: TNR }}>IEP Access Requests</span>
+            </div>
+            <div style={{ overflowX: "auto" }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 11, fontFamily: TNR }}>
+                <thead>
+                  <tr style={{ borderBottom: `1px solid ${M.g200}`, textAlign: "left" }}>
+                    <th style={{ padding: "8px 4px", color: M.g500 }}>Student</th>
+                    <th style={{ padding: "8px 4px", color: M.g500 }}>Parent</th>
+                    <th style={{ padding: "8px 4px", color: M.g500, textAlign: "right" }}>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {iepRequests.length > 0 ? (
+                    iepRequests.filter(r => r.status === 'pending').map((req, i) => (
+                      <tr key={req.id} style={{ borderBottom: `1px solid ${M.g100}` }}>
+                        <td style={{ padding: "10px 4px", fontWeight: 600, color: M.g800 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                            <div style={{ width: 4, height: 4, borderRadius: "50%", background: M.gold }} />
+                            {req.studentName}
+                          </div>
+                        </td>
+                        <td style={{ padding: "10px 4px", color: M.g500 }}>{req.parentName}</td>
+                        <td style={{ padding: "10px 4px", textAlign: "right", display: "flex", gap: 5, justifyContent: "flex-end" }}>
+                          <button
+                            onClick={() => updateIEPRequest(req.id, 'approved')}
+                            style={{ background: M.maroon, color: M.white, border: "none", borderRadius: 4, padding: "4px 8px", fontSize: 9, cursor: "pointer", fontWeight: 700 }}
+                            title="Approve IEP Access"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => updateIEPRequest(req.id, 'rejected')}
+                            style={{ background: M.g400, color: M.white, border: "none", borderRadius: 4, padding: "4px 8px", fontSize: 9, cursor: "pointer", fontWeight: 700 }}
+                            title="Reject IEP Access"
+                          >
+                            Reject
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={3} style={{ padding: "20px 0", textAlign: "center", color: M.g400, fontStyle: "italic" }}>No pending requests</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+              <div style={{ marginTop: 12, textAlign: "right" }}>
+                <Btn variant="ghost" onClick={() => navigate('/teacher/iep-requests')} style={{ fontSize: 11, padding: "6px 12px" }}>
+                  View All Requests <Icon name="arrow" size={12} color={M.maroon} />
+                </Btn>
+              </div>
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Select Student ─────────────────────────────────────────────────────────
+
+  const SelectStudent: React.FC<{ onSelect: (s: Student) => void }> = ({ onSelect }) => {
+    const [search, setSearch] = useState("");
+    const riskColor: Record<string, string> = { low: M.maroon, moderate: M.amber, critical: M.red };
+    const filtered = students.filter(s => s.name.toLowerCase().includes(search.toLowerCase()));
+    return (
+      <div style={{ padding: "24px", maxWidth: 700, margin: "0 auto" }}>
+        <STitle step={1} total={8} title="Select Student" sub="Choose a student to record an activity log for Mathematics." />
+        <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+          <div style={{ position: "relative", flex: 1 }}>
+            <div style={{ position: "absolute", left: 10, top: "50%", transform: "translateY(-50%)" }}><Icon name="search" size={14} color={M.g400} /></div>
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search students…" style={{ ...inputStyle, paddingLeft: 32 }} />
+          </div>
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))", gap: 10 }}>
+          {filtered.map(s => (
+            <div key={s.id} style={{ background: M.white, border: `1px solid ${M.g200}`, borderRadius: 10, padding: 14, display: "flex", flexDirection: "column", gap: 10, boxShadow: "0 1px 4px rgba(123,28,42,0.05)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <Av initials={s.initials} size={36} />
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: 12, color: M.g800, fontFamily: TNR }}>{s.name}</div>
+                  <div style={{ fontSize: 10, color: M.g400, fontFamily: TNR }}>{s.section}</div>
+                  <Tag color={riskColor[s.risk] as string}>{s.risk.toUpperCase()}</Tag>
+                </div>
+              </div>
+              <Btn onClick={() => onSelect(s)} style={{ justifyContent: "center", fontSize: 11, padding: "6px" }}>Select <Icon name="arrow" size={12} color={M.white} /></Btn>
+            </div>
+          ))}
+        </div>
+        <div style={{ fontSize: 11, color: M.g400, marginTop: 12, fontFamily: TNR }}>Showing {filtered.length} of 38 students</div>
+      </div>
+    );
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  // ── Select Session ─────────────────────────────────────────────────────────
+
+  const SelectSession: React.FC<{ student: Student; onContinue: () => void }> = ({ student, onContinue }) => {
+    const [date, setDate] = useState("2025-05-24");
+    const [session, setSession] = useState("3rd Period - 10:30 AM - 11:30 AM");
+    return (
+      <div style={{ padding: "24px", maxWidth: 440, margin: "0 auto" }}>
+        <STitle step={1} total={8} title="Select Session" sub="Confirm date and period for this activity log." />
+        <div style={{ background: M.maroonLight, border: `1px solid ${M.maroon}25`, borderRadius: 10, padding: "12px 14px", marginBottom: 18, display: "flex", alignItems: "center", gap: 12 }}>
+          <Av initials={student.initials} size={38} />
+          <div>
+            <div style={{ fontWeight: 700, fontSize: 13, color: M.maroonDeep, fontFamily: TNR }}>{student.name}</div>
+            <div style={{ fontSize: 11, color: M.g500, fontFamily: TNR }}>{student.section}</div>
+          </div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {[
+            { label: "Date", el: <input type="date" value={date} onChange={e => setDate(e.target.value)} style={inputStyle} /> },
+            { label: "Period", el: (
+              <select value={session} onChange={e => setSession(e.target.value)} style={inputStyle}>
+                {['1st Period - 7:30 AM - 8:30 AM','2nd Period - 8:30 AM - 9:30 AM','3rd Period - 10:30 AM - 11:30 AM','4th Period - 1:00 PM - 2:00 PM','5th Period - 2:00 PM - 3:00 PM'].map(s => <option key={s}>{s}</option>)}
+              </select>
+            )},
+            { label: "Subject", el: <input value="Mathematics" readOnly style={{ ...inputStyle, background: M.g50, color: M.g500 }} /> },
+          ].map(({ label, el }) => (
+            <div key={label}>
+              <label style={{ fontSize: 11, fontWeight: 600, color: M.g500, display: "block", marginBottom: 5, textTransform: "uppercase", letterSpacing: 0.5, fontFamily: TNR }}>{label}</label>
+              {el}
+            </div>
+          ))}
+        </div>
+        <Btn onClick={onContinue} style={{ marginTop: 18 }}>Continue <Icon name="arrow" size={14} color={M.white} /></Btn>
+      </div>
+    );
+  }
+
+  // ── Activity Log ───────────────────────────────────────────────────────────
+
+  const ActivityLog: React.FC<{ student: Student; onSave: () => void }> = ({ student, onSave }) => {
+    const [obs, setObs] = useState("");
+    const [category, setCategory] = useState(BEHAVIOR_CATEGORIES[0].label);
+    const [mood, setMood] = useState("Happy");
+    const [participation, setParticipation] = useState(3);
+    const [incident, setIncident] = useState("No Incident");
+    const [interventions, setInterventions] = useState({ "Verbal Reminder": true, "Seat Adjustment": false, "Task Modification": false, "Counseling / Check-in": false, "Referral to Guidance": false, "Positive Reinforcement": false });
+    const [remarks, setRemarks] = useState("");
+
+    const moods = [{ label: "Happy", icon: "😊" }, { label: "Anxious", icon: "😰" }, { label: "Frustrated", icon: "😤" }, { label: "Fatigued", icon: "😴" }, { label: "Sad", icon: "😢" }];
+    const incidents = ["No Incident", "Minor Disruption", "Behavioral Incident", "Physical Aggression"];
+
+    return (
+      <div style={{ padding: "24px", maxWidth: 620, margin: "0 auto" }}>
+        <STitle step={2} total={8} title="Activity Log" sub={`${student.name} · Math · May 24, 2025`} />
+        <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
+          <Card>
+            <label style={{ fontSize: 11, fontWeight: 700, color: M.g600, display: "flex", alignItems: "center", gap: 6, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5, fontFamily: TNR }}>
+              <Icon name="file" size={13} color={M.maroon} /> Observation
+            </label>
+            <textarea value={obs} onChange={e => setObs(e.target.value)} placeholder="Describe observed behavior…" style={{ ...inputStyle, minHeight: 75, resize: "vertical", lineHeight: 1.6 }} />
+            <div style={{ fontSize: 10, color: M.g400, textAlign: "right" as const, marginTop: 2, fontFamily: TNR }}>{obs.length}/500</div>
+          </Card>
+
+          <Card>
+            <label style={{ fontSize: 11, fontWeight: 700, color: M.g600, display: "flex", alignItems: "center", gap: 6, marginBottom: 10, textTransform: "uppercase", letterSpacing: 0.5, fontFamily: TNR }}>
+              <Icon name="brain" size={13} color={M.maroon} /> Behavior Category
+            </label>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              {BEHAVIOR_CATEGORIES.map(c => (
+                <button key={c.label} title={c.desc} onClick={() => setCategory(c.label)} style={{ padding: "4px 10px", borderRadius: 5, border: `1.5px solid`, borderColor: category === c.label ? (c.type === "positive" ? M.maroon : M.red) : M.g200, background: category === c.label ? (c.type === "positive" ? M.maroonLight : M.redLight) : M.white, color: category === c.label ? (c.type === "positive" ? M.maroon : M.red) : M.g500, fontSize: 11, fontFamily: TNR, fontWeight: category === c.label ? 700 : 400, cursor: "pointer" }}>
+                  {c.type === "positive" ? "✓" : "!"} {c.label}
+                </button>
+              ))}
+            </div>
+          </Card>
+
+          <Card>
+            <label style={{ fontSize: 11, fontWeight: 700, color: M.g600, display: "flex", alignItems: "center", gap: 6, marginBottom: 10, textTransform: "uppercase", letterSpacing: 0.5, fontFamily: TNR }}>
+              <Icon name="star" size={13} color={M.maroon} /> Mood
+            </label>
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {moods.map(m => (
+                <button key={m.label} onClick={() => setMood(m.label)} style={{ padding: "5px 12px", borderRadius: 6, border: `1.5px solid`, borderColor: mood === m.label ? M.maroon : M.g200, background: mood === m.label ? M.maroonLight : M.white, color: mood === m.label ? M.maroon : M.g500, fontSize: 11, fontFamily: TNR, fontWeight: mood === m.label ? 700 : 400, cursor: "pointer" }}>{m.icon} {m.label}</button>
+              ))}
+            </div>
+          </Card>
+
+          <Card>
+            <label style={{ fontSize: 11, fontWeight: 700, color: M.g600, display: "flex", alignItems: "center", gap: 6, marginBottom: 10, textTransform: "uppercase", letterSpacing: 0.5, fontFamily: TNR }}>
+              <Icon name="activity" size={13} color={M.maroon} /> Participation — {participation}/5
+            </label>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: 10, color: M.g400, fontFamily: TNR }}>Low</span>
+              <input type="range" min="1" max="5" step="1" value={participation} onChange={e => setParticipation(+e.target.value)} style={{ flex: 1, accentColor: M.maroon }} />
+              <span style={{ fontSize: 10, color: M.g400, fontFamily: TNR }}>High</span>
+            </div>
+          </Card>
+
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+            <Card>
+              <label style={{ fontSize: 11, fontWeight: 700, color: M.g600, display: "flex", alignItems: "center", gap: 6, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5, fontFamily: TNR }}>
+                <Icon name="alert" size={13} color={M.maroon} /> Incident
+              </label>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {incidents.map(inc => {
+                  const ic = inc === "No Incident" ? M.maroon : inc === "Minor Disruption" ? M.amber : M.red;
+                  return <button key={inc} onClick={() => setIncident(inc)} style={{ padding: "5px 10px", borderRadius: 6, border: `1.5px solid`, borderColor: incident === inc ? ic : M.g200, background: incident === inc ? ic + "12" : M.white, color: incident === inc ? ic : M.g500, fontSize: 11, fontFamily: TNR, fontWeight: incident === inc ? 700 : 400, cursor: "pointer", textAlign: "left" as const }}>{inc}</button>;
+                })}
+              </div>
+            </Card>
+            <Card>
+              <label style={{ fontSize: 11, fontWeight: 700, color: M.g600, display: "flex", alignItems: "center", gap: 6, marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5, fontFamily: TNR }}>
+                <Icon name="target" size={13} color={M.maroon} /> Interventions
+              </label>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {Object.keys(interventions).map(k => (
+                  <label key={k} style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 12, cursor: "pointer", color: M.g700, fontFamily: TNR }}>
+                    <input type="checkbox" checked={interventions[k]} onChange={() => setInterventions(p => ({ ...p, [k]: !p[k] }))} style={{ accentColor: M.maroon }} /> {k}
+                  </label>
+                ))}
+              </div>
+            </Card>
+          </div>
+
+          <Card>
+            <label style={{ fontSize: 11, fontWeight: 700, color: M.g600, display: "flex", alignItems: "center", gap: 6, marginBottom: 6, textTransform: "uppercase", letterSpacing: 0.5, fontFamily: TNR }}>
+              <Icon name="file" size={13} color={M.maroon} /> Remarks
+            </label>
+            <textarea value={remarks} onChange={e => setRemarks(e.target.value)} placeholder="Additional notes…" style={{ ...inputStyle, minHeight: 55, resize: "vertical", lineHeight: 1.6 }} />
+          </Card>
+        </div>
+
+        <div style={{ display: "flex", gap: 8, marginTop: 18 }}>
+          <Btn onClick={onSave}><Icon name="save" size={14} color={M.white} /> Save Log</Btn>
+          <Btn variant="secondary">Save Draft</Btn>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Save Confirmation ──────────────────────────────────────────────────────
+
+  const SaveConfirmation: React.FC<{ student: Student; onProceed: () => void }> = ({ student, onProceed }) => {
+    return (
+      <div style={{ padding: "24px", maxWidth: 440, margin: "0 auto" }}>
+        <div style={{ textAlign: "center", marginBottom: 24 }}>
+          <div style={{ width: 64, height: 64, borderRadius: "50%", background: M.maroonLight, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px", border: `2px solid ${M.maroon}30` }}>
+            <Icon name="check" size={32} color={M.maroon} />
+          </div>
+          <h2 style={{ fontSize: 16, fontWeight: 700, color: M.maroon, margin: "0 0 6px", fontFamily: TNR, fontStyle: "italic" }}>Activity Log Saved</h2>
+          <p style={{ color: M.g400, margin: 0, fontSize: 12, fontFamily: TNR }}>Recorded and synced successfully.</p>
+        </div>
+        <Card style={{ background: M.maroonPale, marginBottom: 18 }}>
+          {[['Student', student.name], ['Subject', 'Mathematics'], ['Session', 'May 24, 2025 — 3rd Period'], ['Saved At', '10:42 AM'], ['Status', '✓ Synced']].map(([k, v]) => (
+            <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "7px 0", borderBottom: `1px solid ${M.g100}`, fontSize: 12, fontFamily: TNR }}>
+              <span style={{ color: M.g500 }}>{k}</span>
+              <span style={{ fontWeight: 600, color: k === 'Status' ? M.maroon : M.g800 }}>{v}</span>
+            </div>
+          ))}
+        </Card>
+        <Btn onClick={onProceed} style={{ width: "100%", justifyContent: "center" }}>Proceed to AI Analysis <Icon name="arrow" size={14} color={M.white} /></Btn>
+      </div>
+    );
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  // ── AI Analysis ────────────────────────────────────────────────────────────
+
+  const AIAnalysis: React.FC<{ student: Student; onNext: () => void }> = ({ student, onNext }) => {
+    const [done, setDone] = useState(false);
+    const [progress, setProgress] = useState(0);
+    useEffect(() => {
+      const iv = setInterval(() => setProgress(p => { if (p >= 100) { clearInterval(iv); setDone(true); return 100; } return p + 4; }), 80);
+      return () => clearInterval(iv);
+    }, []);
+    return (
+      <div style={{ padding: "24px", maxWidth: 680, margin: "0 auto" }}>
+        <STitle step={4} total={8} title="AI Behavioral Analysis" sub="Analyzing patterns across subjects and sessions." />
+        {!done ? (
+          <Card style={{ textAlign: "center", padding: "40px 24px" }}>
+            <div style={{ width: 64, height: 64, borderRadius: "50%", background: M.maroonLight, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 14px" }}>
+              <Icon name="brain" size={30} color={M.maroon} />
+            </div>
+            <div style={{ fontWeight: 700, fontSize: 14, color: M.g800, marginBottom: 6, fontFamily: TNR }}>Analyzing Behavioral Patterns…</div>
+            <p style={{ color: M.g400, fontSize: 12, marginBottom: 20, fontFamily: TNR }}>Cross-referencing 18 activity logs across Mathematics, English, and Science.</p>
+            <div style={{ maxWidth: 320, margin: "0 auto" }}>
+              <PBar val={progress} color={M.maroon} h={7} />
+              <div style={{ fontSize: 11, color: M.g400, marginTop: 6, fontFamily: TNR }}>{progress}% complete</div>
+            </div>
+          </Card>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+              <Card style={{ background: M.maroonPale }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: M.g400, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 12, fontFamily: TNR }}>Input Summary</div>
+                {[["Student", student.name], ["Logs Analyzed", "18"], ["Subjects", "Math · English · Science"], ["Date Range", "Apr 1 – May 24"]].map(([k, v]) => (
+                  <div key={k} style={{ marginBottom: 10 }}>
+                    <div style={{ fontSize: 9, color: M.g400, fontWeight: 600, textTransform: "uppercase", fontFamily: TNR }}>{k}</div>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: M.g800, fontFamily: TNR }}>{v}</div>
+                  </div>
+                ))}
+              </Card>
+              <Card style={{ background: M.maroonLight, border: `1px solid ${M.maroon}20` }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: M.maroon, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 8, fontFamily: TNR, display: "flex", alignItems: "center", gap: 5 }}>
+                  <Icon name="brain" size={12} color={M.maroon} /> AI Result
+                </div>
+                <ul style={{ margin: "0 0 12px", padding: "0 0 0 14px", fontSize: 12, color: M.g700, lineHeight: 2, fontFamily: TNR }}>
+                  <li>Repeated inattentiveness in Math.</li>
+                  <li>Consistent participation in English.</li>
+                  <li>Signs of hyperactivity in Science.</li>
+                </ul>
+                <div style={{ background: M.white, borderRadius: 8, padding: "10px 12px", border: `1px solid ${M.maroon}20` }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, color: M.maroon, marginBottom: 4, fontFamily: TNR, display: "flex", alignItems: "center", gap: 5 }}>
+                    <Icon name="eye" size={11} color={M.maroon} /> AI Insight
+                  </div>
+                  <p style={{ fontSize: 11, color: M.g700, margin: 0, lineHeight: 1.7, fontFamily: TNR }}>Inconsistent attention across subjects. Structured interventions in Math recommended.</p>
+                </div>
+              </Card>
+            </div>
+            <Card>
+              <div style={{ fontSize: 12, fontWeight: 700, color: M.g700, marginBottom: 12, fontFamily: TNR, display: "flex", alignItems: "center", gap: 6 }}>
+                <Icon name="chart" size={14} color={M.maroon} /> Subject-wise Behavioral Score
+              </div>
+              {[{ label: "Mathematics — Inattentiveness", val: 78, color: M.red }, { label: "English — Participation", val: 82, color: M.maroon }, { label: "Science — Hyperactivity", val: 54, color: M.amber }, { label: "Overall Concern", val: 65, color: M.sky }].map(b => (
+                <div key={b.label} style={{ marginBottom: 10 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 4, fontFamily: TNR }}>
+                    <span style={{ color: M.g500 }}>{b.label}</span>
+                    <span style={{ fontWeight: 700, color: b.color }}>{b.val}%</span>
+                  </div>
+                  <PBar val={b.val} color={b.color} h={5} />
+                </div>
+              ))}
+            </Card>
+            <Btn onClick={onNext}>Next: Risk Classification <Icon name="arrow" size={14} color={M.white} /></Btn>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ── Risk Classification ────────────────────────────────────────────────────
+
+  const RiskClassification: React.FC<{ student: Student; onNext: () => void }> = ({ student, onNext }) => {
+    return (
+      <div style={{ padding: "24px", maxWidth: 680, margin: "0 auto" }}>
+        <STitle step={5} total={8} title="Risk Classification & XAI" sub="AI-powered risk assessment with explainable AI transparency." />
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginBottom: 14 }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <Card style={{ background: M.amberLight, border: `1px solid ${M.amber}30` }}>
+              <div style={{ fontSize: 10, color: M.amber, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 8, fontFamily: TNR }}>Risk Level</div>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ width: 44, height: 44, borderRadius: 12, background: M.amber + "20", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <Icon name="alert" size={24} color={M.amber} />
+                </div>
+                <div>
+                  <div style={{ fontSize: 15, fontWeight: 800, color: M.amber, fontFamily: TNR, fontStyle: "italic" }}>MODERATE RISK</div>
+                  <div style={{ fontSize: 11, color: M.g500, marginTop: 2, fontFamily: TNR }}>Based on cross-subject patterns.</div>
+                </div>
+              </div>
+            </Card>
+            <Card>
+              <div style={{ fontSize: 12, fontWeight: 700, color: M.g700, marginBottom: 10, fontFamily: TNR, display: "flex", alignItems: "center", gap: 6 }}>
+                <Icon name="target" size={14} color={M.maroon} /> AI Recommendations
+              </div>
+              {["Structured attention support in Math.", "Encourage active participation.", "Continue behavioral monitoring.", "Parent communication recommended.", "Counselor check-in within 1 week."].map((r, i) => (
+                <div key={i} style={{ display: "flex", gap: 8, marginBottom: 8, fontSize: 12, fontFamily: TNR }}>
+                  <Icon name="check" size={13} color={M.maroon} />
+                  <span style={{ color: M.g700 }}>{r}</span>
+                </div>
+              ))}
+            </Card>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <Card>
+              <div style={{ fontSize: 12, fontWeight: 700, color: M.g700, marginBottom: 10, fontFamily: TNR, display: "flex", alignItems: "center", gap: 6 }}>
+                <Icon name="eye" size={14} color={M.maroon} /> XAI Explanation
+              </div>
+              <p style={{ fontSize: 12, color: M.g700, lineHeight: 1.7, margin: "0 0 12px", fontFamily: TNR }}><strong>Moderate Risk</strong> due to repeated inattentive behavior in Math and inconsistent participation patterns.</p>
+              {[{ label: "Math Inattentiveness", val: 80, color: M.red }, { label: "English Engagement", val: 75, color: M.maroon }, { label: "Science Hyperactivity", val: 55, color: M.amber }, { label: "Risk Confidence", val: 68, color: M.sky }].map(b => (
+                <div key={b.label} style={{ marginBottom: 8 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, marginBottom: 3, fontFamily: TNR }}>
+                    <span style={{ color: M.g500 }}>{b.label}</span>
+                    <span style={{ fontWeight: 700, color: b.color }}>{b.val}%</span>
+                  </div>
+                  <PBar val={b.val} color={b.color} h={4} />
+                </div>
+              ))}
+            </Card>
+            <Card style={{ background: M.maroonPale }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: M.g700, marginBottom: 8, fontFamily: TNR }}>Escalation History</div>
+              {[{ date: "May 10", level: "Low", dot: M.maroon }, { date: "May 17", level: "Moderate", dot: M.amber }, { date: "May 24", level: "Moderate", dot: M.amber }].map((h, i) => (
+                <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 11, padding: "5px 0", borderBottom: i < 2 ? `1px solid ${M.g100}` : "none", fontFamily: TNR }}>
+                  <span style={{ color: M.g500 }}>{h.date}</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                    <div style={{ width: 6, height: 6, borderRadius: "50%", background: h.dot }} />
+                    <span style={{ color: M.g700 }}>{h.level}</span>
+                  </div>
+                </div>
+              ))}
+            </Card>
+          </div>
+        </div>
+        <Btn onClick={onNext}>Next: Notifications <Icon name="arrow" size={14} color={M.white} /></Btn>
+      </div>
+    );
+  }
+
+  // ── Notifications ──────────────────────────────────────────────────────────
+
+  interface NotificationItem {
+    icon: IconName;
+    title: string;
+    to: string;
+    reason: string;
+    time: string;
+  }
+
+  const Notifications: React.FC<{ student: Student; onNext: () => void }> = ({ student, onNext }) => {
+    const nots: NotificationItem[] = [
+      { icon: "users", title: "Parent Notification", to: `${student.name}'s Parent/Guardian`, reason: "Repeated inattentive behavior in Math. Moderate risk assigned.", time: "10:45 AM" },
+      { icon: "home", title: "Admin / Principal", to: "School Administrator", reason: "Moderate behavioral risk detected for Grade 7 Section 3-F student.", time: "10:45 AM" },
+      { icon: "shield", title: "Guidance Counselor", to: "School Guidance Office", reason: "Student flagged for monitoring. Counseling session recommended within 7 days.", time: "10:46 AM" },
+    ];
+    return (
+      <div style={{ padding: "24px", maxWidth: 520, margin: "0 auto" }}>
+        <STitle step={6} total={8} title="Notification Triggers" sub="Automated alerts sent based on risk assessment." />
+        {nots.map((n, i) => (
+          <Card key={i} style={{ marginBottom: 10, display: "flex", gap: 12, alignItems: "flex-start" }}>
+            <div style={{ width: 38, height: 38, borderRadius: 10, background: M.maroonLight, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <Icon name={n.icon} size={18} color={M.maroon} />
+            </div>
+            <div style={{ flex: 1 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 4 }}>
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 12, color: M.g800, fontFamily: TNR }}>{n.title}</div>
+                  <div style={{ fontSize: 10, color: M.g400, fontFamily: TNR }}>To: {n.to}</div>
+                </div>
+                <div style={{ display: "flex", gap: 6, alignItems: "center", flexShrink: 0 }}>
+                  <Tag color={M.maroon}>✓ Sent</Tag>
+                  <span style={{ fontSize: 10, color: M.g400, fontFamily: TNR }}>{n.time}</span>
+                </div>
+              </div>
+              <p style={{ fontSize: 11, color: M.g500, margin: 0, lineHeight: 1.6, fontFamily: TNR }}>{n.reason}</p>
+            </div>
+          </Card>
+        ))}
+        <Btn onClick={onNext} style={{ marginTop: 6 }}>Next: Analytics <Icon name="arrow" size={14} color={M.white} /></Btn>
+      </div>
+    );
+  }
+
+  // ── Analytics ──────────────────────────────────────────────────────────────
+
+  const Analytics: React.FC<{ student: Student; onNext: () => void }> = ({ student, onNext }) => {
+    const [tab, setTab] = useState("trends");
+    const tabs = [{ id: "trends", label: "Trends" }, { id: "intervention", label: "Interventions" }, { id: "subjects", label: "Subjects" }, { id: "progress", label: "Progress" }];
+    const W = 460, H = 120, PAD = 24, maxV = 8;
+    const dates = ["Apr 1", "Apr 8", "Apr 15", "May 1", "May 8", "May 15", "May 24"];
+    const inatt = [3, 4, 5, 4, 6, 5, 7];
+    const coop = [5, 4, 3, 5, 4, 6, 5];
+    const hyper = [1, 2, 1, 3, 2, 3, 2];
+    const xP = (i: number) => PAD + (i / (dates.length - 1)) * (W - PAD * 2);
+    const yP = (v: number) => H - PAD - (v / maxV) * (H - PAD * 2);
+    const toPath = (arr: number[]) => arr.map((v, i) => `${i === 0 ? "M" : "L"}${xP(i)},${yP(v)}`).join(" ");
+
+    return (
+      <div style={{ padding: "24px", maxWidth: 700, margin: "0 auto" }}>
+        <STitle step={7} total={8} title="Behavioral Analytics" sub="Data-driven insights on student behavior and interventions." />
+        <div style={{ display: "flex", gap: 6, marginBottom: 16, flexWrap: "wrap" }}>
+          {tabs.map(t => (
+            <button key={t.id} onClick={() => setTab(t.id)} style={{ padding: "6px 14px", borderRadius: 7, border: `1.5px solid`, borderColor: tab === t.id ? M.maroon : M.g200, background: tab === t.id ? M.maroonLight : M.white, color: tab === t.id ? M.maroon : M.g500, fontSize: 12, fontFamily: TNR, fontWeight: tab === t.id ? 700 : 500, cursor: "pointer" }}>{t.label}</button>
+          ))}
+        </div>
+
+        {tab === "trends" && (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+            <Card>
+              <div style={{ fontSize: 12, fontWeight: 700, color: M.g700, marginBottom: 12, fontFamily: TNR }}>Behavior Trend Over Time</div>
+              <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ overflow: "visible" }}>
+                {dates.map((d, i) => <text key={d} x={xP(i)} y={H - 6} textAnchor="middle" fontSize="8" fill={M.g400} fontFamily={TNR}>{d}</text>)}
+                {[0, 2, 4, 6, 8].map(v => <line key={v} x1={PAD} y1={yP(v)} x2={W - PAD} y2={yP(v)} stroke={M.g100} strokeWidth="1" />)}
+                <path d={toPath(inatt)} fill="none" stroke={M.red} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d={toPath(coop)} fill="none" stroke={M.maroon} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                <path d={toPath(hyper)} fill="none" stroke={M.amber} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              <div style={{ display: "flex", gap: 12, marginTop: 6 }}>
+                {[["Inattentive", M.red], ["Cooperative", M.maroon], ["Hyperactive", M.amber]].map(([l, c]) => (
+                  <div key={l} style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 10, fontFamily: TNR }}>
+                    <div style={{ width: 10, height: 2.5, borderRadius: 2, background: c }} />
+                    <span style={{ color: M.g500 }}>{l}</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+            <Card style={{ background: M.maroonPale }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: M.g700, marginBottom: 10, fontFamily: TNR, display: "flex", alignItems: "center", gap: 6 }}>
+                <Icon name="info" size={14} color={M.maroon} /> Key Insights
+              </div>
+              {[{ icon: "chart", text: "Inattentiveness in Math increasing over 4 weeks." }, { icon: "check", text: "Good engagement consistently in English." }, { icon: "zap", text: "Hyperactivity in Science moderate but stable." }, { icon: "target", text: "Verbal Reminder & Seat Adjustment applied 6×." }].map((ins, i) => (
+                <div key={i} style={{ display: "flex", gap: 8, marginBottom: 10, fontSize: 11, fontFamily: TNR }}>
+                  <Icon name={ins.icon} size={13} color={M.maroon} />
+                  <span style={{ color: M.g700, lineHeight: 1.5 }}>{ins.text}</span>
+                </div>
+              ))}
+            </Card>
+          </div>
+        )}
+
+        {tab === "intervention" && (
+          <Card>
+            <div style={{ fontSize: 12, fontWeight: 700, color: M.g700, marginBottom: 12, fontFamily: TNR }}>Intervention History</div>
+            {[{ date: "May 24", type: "Seat Adjustment", result: "Partially Effective", c: M.amber }, { date: "May 17", type: "Verbal Reminder + Task Modification", result: "Effective", c: M.maroon }, { date: "May 10", type: "Verbal Reminder", result: "Effective", c: M.maroon }, { date: "May 3", type: "Counseling / Check-in", result: "Partially Effective", c: M.amber }, { date: "Apr 26", type: "Referral to Guidance", result: "Pending", c: M.sky }].map((h, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 0", borderBottom: `1px solid ${M.g100}` }}>
+                <div style={{ minWidth: 46, fontSize: 10, color: M.g400, fontWeight: 600, fontFamily: TNR }}>{h.date}</div>
+                <div style={{ flex: 1, fontSize: 12, color: M.g700, fontFamily: TNR }}>{h.type}</div>
+                <Tag color={h.c}>{h.result}</Tag>
+              </div>
+            ))}
+          </Card>
+        )}
+
+        {tab === "subjects" && (
+          <Card>
+            <div style={{ fontSize: 12, fontWeight: 700, color: M.g700, marginBottom: 12, fontFamily: TNR }}>Subject Comparison</div>
+            {[{ subject: "Mathematics", positive: 32, concern: 68, incidents: 7 }, { subject: "English", positive: 78, concern: 22, incidents: 1 }, { subject: "Science", positive: 55, concern: 45, incidents: 4 }, { subject: "MAPEH", positive: 80, concern: 20, incidents: 0 }].map(s => (
+              <div key={s.subject} style={{ marginBottom: 14 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 5, fontFamily: TNR }}>
+                  <span style={{ fontWeight: 600, color: M.g700 }}>{s.subject}</span>
+                  <span style={{ fontSize: 10, color: M.g400 }}>{s.incidents} incident{s.incidents !== 1 ? "s" : ""}</span>
+                </div>
+                <div style={{ display: "flex", height: 6, borderRadius: 3, overflow: "hidden" }}>
+                  <div style={{ width: `${s.positive}%`, background: M.maroon }} />
+                  <div style={{ width: `${s.concern}%`, background: M.red + "70" }} />
+                </div>
+                <div style={{ display: "flex", gap: 12, marginTop: 4, fontSize: 10, fontFamily: TNR }}>
+                  <span style={{ color: M.maroon }}>✓ {s.positive}% positive</span>
+                  <span style={{ color: M.red }}>! {s.concern}% concern</span>
+                </div>
+              </div>
+            ))}
+          </Card>
+        )}
+
+        {tab === "progress" && (
+          <Card>
+            <div style={{ fontSize: 12, fontWeight: 700, color: M.g700, marginBottom: 12, fontFamily: TNR }}>Progress Tracking — {student.name}</div>
+            {[{ label: "Reduction in Inattentive Episodes", current: 42, target: 80, color: M.maroon }, { label: "Cooperative Behavior", current: 68, target: 90, color: M.maroonDark }, { label: "Participation Rate", current: 55, target: 85, color: M.sky }, { label: "Intervention Compliance", current: 75, target: 100, color: M.purple }].map(p => (
+              <div key={p.label} style={{ marginBottom: 14 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, marginBottom: 5, fontFamily: TNR }}>
+                  <span style={{ color: M.g700 }}>{p.label}</span>
+                  <span style={{ fontWeight: 700, color: p.color }}>{p.current}% / {p.target}%</span>
+                </div>
+                <PBar val={p.current} color={p.color} h={5} />
+              </div>
+            ))}
+          </Card>
+        )}
+
+        <Btn onClick={onNext} style={{ marginTop: 18 }}>Next: Reports <Icon name="arrow" size={14} color={M.white} /></Btn>
+      </div>
+    );
+  }
+
+  // ── Reports ────────────────────────────────────────────────────────────────
+
+  const Reports: React.FC<{ student: Student; onFinish: () => void }> = ({ student, onFinish }) => {
+    const [selected, setSelected] = useState<string[]>([]);
+    const [generating, setGenerating] = useState<string | null>(null);
+    const [generated, setGenerated] = useState<string[]>([]);
+    const toggle = (id: string) => setSelected(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
+    const generate = (id: string) => { setGenerating(id); setTimeout(() => { setGenerating(null); setGenerated(p => [...p, id]); }, 1600); };
+    const generateAll = () => selected.filter(id => !generated.includes(id)).forEach((id, i) => setTimeout(() => generate(id), i * 350));
+
+    return (
+      <div style={{ padding: "24px", maxWidth: 840, margin: "0 auto" }}>
+        <STitle step={8} total={8} title="Generate Reports" sub="AI-powered behavioral and intervention reports." />
+        <div style={{ background: M.maroonPale, border: `1px solid ${M.maroon}20`, borderRadius: 9, padding: "10px 14px", marginBottom: 18, fontSize: 12, color: M.g700, fontFamily: TNR, display: "flex", alignItems: "center", gap: 8 }}>
+          <Icon name="file" size={14} color={M.maroon} />
+          <span><strong>{student.name}</strong> · 3-F · Mathematics · May 24, 2025</span>
+          <span style={{ marginLeft: 6, color: M.g400, fontSize: 11 }}>— Select and generate reports below</span>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(270px, 1fr))", gap: 12, marginBottom: 20 }}>
+          {REPORT_TYPES.map(report => {
+            const isSel = selected.includes(report.id);
+            const isGen = generating === report.id;
+            const isDone = generated.includes(report.id);
+            return (
+              <div key={report.id} onClick={() => toggle(report.id)} style={{ background: isSel ? report.color + "06" : M.white, border: `2px solid ${isSel ? report.color : M.g200}`, borderRadius: 10, padding: 14, cursor: "pointer", transition: "all 0.15s", boxShadow: isSel ? `0 3px 12px ${report.color}20` : "0 1px 3px rgba(0,0,0,0.04)" }}>
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 8 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div style={{ width: 34, height: 34, borderRadius: 8, background: report.color + "15", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <Icon name={report.icon} size={16} color={report.color} />
+                    </div>
+                    <div style={{ fontWeight: 700, fontSize: 12, color: isSel ? report.color : M.g800, lineHeight: 1.3, fontFamily: TNR }}>{report.title}</div>
+                  </div>
+                  <div style={{ width: 17, height: 17, borderRadius: "50%", border: `2px solid ${isSel ? report.color : M.g200}`, background: isSel ? report.color : "transparent", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    {isSel && <Icon name="check" size={9} color={M.white} />}
+                  </div>
+                </div>
+                <p style={{ fontSize: 11, color: M.g500, margin: "0 0 8px", lineHeight: 1.6, fontFamily: TNR }}>{report.desc}</p>
+                <div style={{ display: "flex", gap: 4, flexWrap: "wrap", marginBottom: isSel ? 10 : 0 }}>
+                  {report.tags.map(tag => <Tag key={tag} color={report.color}>{tag}</Tag>)}
+                </div>
+                {isSel && (
+                  <div onClick={e => e.stopPropagation()}>
+                    {isDone ? (
+                      <button style={{ width: "100%", background: `linear-gradient(135deg, ${M.maroon}, ${M.maroonDark})`, color: M.white, border: "none", borderRadius: 7, padding: "7px", fontSize: 11, fontFamily: TNR, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                        <Icon name="download" size={12} color={M.white} /> Generated — Download PDF
+                      </button>
+                    ) : (
+                      <button onClick={() => generate(report.id)} disabled={isGen} style={{ width: "100%", background: isGen ? M.g400 : report.color, color: M.white, border: "none", borderRadius: 7, padding: "7px", fontSize: 11, fontFamily: TNR, fontWeight: 700, cursor: isGen ? "not-allowed" : "pointer" }}>
+                        {isGen ? "Generating…" : "Generate →"}
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        {selected.length > 0 && (
+          <div style={{ background: `linear-gradient(135deg, ${M.maroonDeep}, ${M.maroon})`, borderRadius: 10, padding: "14px 18px", display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16, color: M.white }}>
+            <div>
+              <div style={{ fontWeight: 700, fontSize: 13, fontFamily: TNR }}>{selected.length} selected · {generated.length} generated</div>
+              <div style={{ fontSize: 11, opacity: 0.6, marginTop: 1, fontFamily: TNR }}>Generate individually or all at once.</div>
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button onClick={generateAll} style={{ background: "rgba(255,255,255,0.15)", color: M.white, border: "1px solid rgba(255,255,255,0.3)", borderRadius: 7, padding: "8px 16px", fontSize: 12, fontFamily: TNR, fontWeight: 700, cursor: "pointer" }}>Generate All</button>
+              {generated.length > 0 && (
+                <button style={{ background: M.gold, color: M.white, border: "none", borderRadius: 7, padding: "8px 16px", fontSize: 12, fontFamily: TNR, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: 6 }}>
+                  <Icon name="download" size={13} color={M.white} /> Download ({generated.length})
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        <div style={{ display: "flex", gap: 8 }}>
+          <Btn onClick={onFinish} variant="ghost"><Icon name="check" size={14} color={M.maroon} /> Complete Process</Btn>
+          <Btn variant="secondary">← Analytics</Btn>
+        </div>
+      </div>
+    );
+  }
+
+  // ── App Root ───────────────────────────────────────────────────────────────
+
+  const TeacherHome: React.FC = () => {
+    const { setUser } = useApp();
+    const navigate = useNavigate();
+    const [view, setView] = useState("dashboard");
+    const [step, setStep] = useState(1);
+    const [student, setStudent] = useState<Student | null>(null);
+
+    const go = (v: string, s = 1) => { setView(v); setStep(s); };
+
+    const handleLogout = () => {
+      setUser(null);
+      navigate("/");
+    };
+
+    return (
+      <>
+        <style>{`
+          * { font-family: 'Times New Roman', Times, serif; box-sizing: border-box; margin: 0; padding: 0; }
+          ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-thumb { background: ${M.g200}; border-radius: 3px; }
+          input[type=range] { accent-color: ${M.maroon}; }
+          input:focus, textarea:focus, select:focus { border-color: ${M.maroon} !important; box-shadow: 0 0 0 2px ${M.maroon}18; }
+        `}</style>
+        <div style={{ minHeight: "100vh", background: M.cream, display: "flex", flexDirection: "column" }}>
+          <TopBar onLogout={handleLogout} onHome={() => go("dashboard")} />
+          {view !== "dashboard" && <StepBar current={step} />}
+          <div style={{ flex: 1, overflowY: "auto", padding: "20px" }}>
+            {view === "dashboard" && <Dashboard onStart={() => go("select-student", 1)} />}
+            {view === "select-student" && <SelectStudent onSelect={s => { setStudent(s); go("session", 1); }} />}
+            {view === "session" && student && <SelectSession student={student} onContinue={() => go("activity-log", 2)} />}
+            {view === "activity-log" && student && <ActivityLog student={student} onSave={() => go("save-confirm", 3)} />}
+            {view === "save-confirm" && student && <SaveConfirmation student={student} onProceed={() => go("ai-analysis", 4)} />}
+            {view === "ai-analysis" && student && <AIAnalysis student={student} onNext={() => go("risk", 5)} />}
+            {view === "risk" && student && <RiskClassification student={student} onNext={() => go("notifications", 6)} />}
+            {view === "notifications" && student && <Notifications student={student} onNext={() => go("analytics", 7)} />}
+            {view === "analytics" && student && <Analytics student={student} onNext={() => go("reports", 8)} />}
+            {view === "reports" && student && <Reports student={student} onFinish={() => { setView("dashboard"); setStudent(null); }} />}
+          </div> 
+        </div>
+      </>
+    );
+  };
+
+  export default TeacherHome;

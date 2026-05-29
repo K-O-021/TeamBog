@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="AdminAnalytics.css">
+    <title>Admin Analytics Dashboard</title>
+</head>
+<body>
+    <nav class="sidebar">
+        <div class="logo">SNED</div>
+        <div class="menu-section">
+            <p class="label">MENU</p>
+            <ul class="menu-list">
+                <li class="menu-item active" aria-label="Dashboard">
+                    <span class="icon">⊞</span>
+                </li>
+                <li class="menu-item" aria-label="Projects">
+                    <span class="icon">📁</span>
+                </li>
+                <li class="menu-item" aria-label="Tasks">
+                    <span class="icon">✓</span>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        <header class="header">
+            <div class="search-bar">
+                <input type="text" placeholder="Search projects..." aria-label="Search projects">
+            </div>
+            <div class="user-profile">
+                <span class="user-name">John Doe</span>
+                <div class="avatar"></div>
+            </div>
+        </header>
+
+        <section class="summary-grid">
+            <div class="card tile">
+                <span class="label">Total Projects</span>
+                <span class="metric">24</span>
+            </div>
+            <div class="card tile">
+                <span class="label">Running</span>
+                <span class="metric highlight">12</span>
+            </div>
+            <div class="card tile">
+                <span class="label">Ended</span>
+                <span class="metric">08</span>
+            </div>
+            <div class="card tile">
+                <span class="label">Pending</span>
+                <span class="metric">04</span>
+            </div>
+        </section>
+
+        <section class="dashboard-grid">
+            <div class="card analytics-large">
+                <h3>Project Analytics</h3>
+                <div class="bar-chart">
+                    <div class="bar" style="height: 80%;"></div>
+                    <div class="bar" style="height: 60%;"></div>
+                    <div class="bar" style="height: 90%;"></div>
+                    <div class="bar" style="height: 45%;"></div>
+                    <div class="bar" style="height: 70%;"></div>
+                </div>
+            </div>
+
+            <div class="card collaboration-list">
+                <h3>Team Collaboration</h3>
+                <div class="team-item">
+                    <div class="small-avatar"></div>
+                    <div class="info">
+                        <span class="name">Sarah Jenkins</span>
+                        <span class="role">Lead Designer</span>
+                    </div>
+                </div>
+                <div class="team-item">
+                    <div class="small-avatar"></div>
+                    <div class="info">
+                        <span class="name">Marcus Chen</span>
+                        <span class="role">Developer</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card progress-gauge organic-pattern" style="--progress: 75;">
+                <h3>Overall Progress</h3>
+                <div class="gauge-container">
+                    <div class="semi-circle">
+                        <div class="mask"></div>
+                    </div>
+                    <span class="gauge-value">75%</span>
+                </div>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

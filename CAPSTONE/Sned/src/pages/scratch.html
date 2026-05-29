@@ -1,0 +1,1904 @@
+import React from 'react';
+import { useApp } from '@/context/AppContext';
+import { 
+  Brain, 
+  Users, 
+  AlertTriangle, 
+  Clock, 
+  ArrowRight,
+  TrendingUp,
+  Sparkles
+} from 'lucide-react';
+import { Link } from 'react-router-dom';
+
+const TeacherHome: React.FC = () => {
+  const { user, students, alerts } = useApp();
+
+  // Filter some data for the minimal dashboard as requested
+  const activeAlerts = alerts?.filter(a => a.type === 'critical' || a.isNew).slice(0, 3) || [];
+  const recentStudents = students?.slice(0, 4) || [];
+
+  return (
+    <div className="max-w-7xl mx-auto space-y-8 animate-fade-in">
+      {/* Welcome Panel - Minimal and Modular */}
+      <section className="bg-white border border-slate-100 rounded-[2rem] p-8 md:p-10 shadow-sm relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-50" />
+        
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-emerald-100 rounded-xl text-emerald-600">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-[0.2em]">Daily Overview</span>
+          </div>
+          <h1 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight mb-2">
+            Welcome back, <span className="text-emerald-600">{user?.name || 'Instructor'}</span>
+          </h1>
+          <p className="text-slate-500 max-w-xl text-sm md:text-base leading-relaxed">
+            Your AI-assisted classroom hub is synced and ready. You have {activeAlerts.length} priority updates requiring your attention today.
+          </p>
+        </div>
+      </section>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* AI Summary Snapshot */}
+        <div className="lg:col-span-2 space-y-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="card-elevated p-8">
+              <div className="flex items-center justify-between mb-6">
+                <div className="p-3 bg-emerald-50 rounded-2xl text-emerald-600">
+                  <Brain className="w-6 h-6" />
+                </div>
+                <TrendingUp className="w-4 h-4 text-emerald-400" />
+              </div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Classroom Health</p>
+              <h3 className="text-3xl font-bold text-slate-900">Optimal</h3>
+              <p className="text-xs text-slate-500 mt-2">SAIE predicts stable behavior patterns for the majority of learners.</p>
+            </div>
+
+            <div className="card-elevated p-8">
+              <div className="flex items-center justify-between mb-6">
+                <div className="p-3 bg-slate-50 rounded-2xl text-slate-600">
+                  <Users className="w-6 h-6" />
+                </div>
+              </div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Active Learners</p>
+              <h3 className="text-3xl font-bold text-slate-900">{students?.length || 0}</h3>
+              <p className="text-xs text-slate-500 mt-2">All student nodes are currently active and transmitting logs.</p>
+            </div>
+          </div>
+
+          {/* Recent Student Activity */}
+          <div className="card-elevated p-8">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-xl font-bold text-slate-900">Recent Activity</h2>
+              <Link to="/teacher/students" className="text-xs font-bold text-emerald-600 hover:underline flex items-center gap-1">
+                View All Students <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+            
+            <div className="space-y-4">
+              {recentStudents.map((student, i) => (
+                <div key={i} className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 hover:bg-emerald-50 transition-colors group">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center font-bold text-slate-400 group-hover:text-emerald-600 group-hover:border-emerald-200 transition-all">
+                      {student.name.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-slate-800">{student.name}</p>
+                      <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Last Log: {student.lastActivity || 'Recently'}</p>
+                    </div>
+                  </div>
+                  <Link to="/teacher/students" className="p-2 text-slate-300 hover:text-emerald-600">
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Active Alerts List */}
+        <div className="space-y-8">
+          <div className="card-elevated p-8 bg-slate-900 text-white border-none shadow-xl shadow-slate-200">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="p-2 bg-white/10 rounded-xl">
+                <AlertTriangle className="w-5 h-5 text-amber-400" />
+              </div>
+              <h2 className="text-lg font-bold">Priority Alerts</h2>
+            </div>
+
+            <div className="space-y-6">
+              {activeAlerts.length > 0 ? activeAlerts.map((alert, i) => (
+                <div key={i} className="relative pl-6 border-l-2 border-emerald-500/30">
+                  <div className="absolute -left-[5px] top-0 w-2 h-2 rounded-full bg-emerald-500" />
+                  <p className="text-[10px] font-bold text-emerald-400 mb-1 uppercase tracking-wider">{alert.type || 'Behavioral'}</p>
+                  <p className="text-sm font-medium text-slate-300 leading-snug">{alert.message}</p>
+                  <p className="text-[10px] text-slate-500 mt-2 flex items-center gap-1">
+                    <Clock className="w-3 h-3" /> {alert.time || '2m ago'}
+                  </p>
+                </div>
+              )) : (
+                <div className="text-center py-4">
+                  <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">No critical alerts</p>
+                </div>
+              )}
+            </div>
+
+            <Link to="/teacher/alerts" className="block w-full text-center mt-10 py-3 rounded-xl bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-widest hover:bg-white/10 transition-all">
+              See All Notifications
+            </Link>
+          </div>
+
+          <div className="card-elevated p-8 bg-emerald-50 border-emerald-100">
+            <h3 className="text-sm font-bold text-emerald-800 uppercase tracking-widest mb-4">Quick Insight</h3>
+            <p className="text-sm text-emerald-700 leading-relaxed font-medium">
+              Engagement levels typically peak after morning routines. Consider scheduling core learning during this window.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default TeacherHome;
+
+
+'import React from 'react';
+import { useApp } from '@/context/AppContext';
+import { 
+  Brain, 
+  Users, 
+  AlertTriangle, 
+  Clock, 
+  ArrowRight,
+  TrendingUp,
+  Sparkles
+} from 'lucide-react';
+import { Link } from 'react-router-dom';
+
+const TeacherHome: React.FC = () => {
+  const { user, students, alerts } = useApp();
+
+  // Filter some data for the minimal dashboard as requested
+  const activeAlerts = alerts?.filter(a => a.type === 'critical' || a.isNew).slice(0, 3) || [];
+  const recentStudents = students?.slice(0, 4) || [];
+
+  return (
+    <div className="max-w-7xl mx-auto space-y-8 animate-fade-in">
+      {/* Welcome Panel - Minimal and Modular */}
+      <section className="bg-white border border-slate-100 rounded-[2rem] p-8 md:p-10 shadow-sm relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 opacity-50" />
+        
+        <div className="relative z-10">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="p-2 bg-emerald-100 rounded-xl text-emerald-600">
+              <Sparkles className="w-5 h-5" />
+            </div>
+            <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-[0.2em]">Daily Overview</span>
+          </div>
+          <h1 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight mb-2">
+            Welcome back, <span className="text-emerald-600">{user?.name || 'Instructor'}</span>
+          </h1>
+          <p className="text-slate-500 max-w-xl text-sm md:text-base leading-relaxed">
+            Your AI-assisted classroom hub is synced and ready. You have {activeAlerts.length} priority updates requiring your attention today.
+          </p>
+        </div>
+      </section>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* AI Summary Snapshot */}
+        <div className="lg:col-span-2 space-y-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="card-elevated p-8">
+              <div className="flex items-center justify-between mb-6">
+                <div className="p-3 bg-emerald-50 rounded-2xl text-emerald-600">
+                  <Brain className="w-6 h-6" />
+                </div>
+                <TrendingUp className="w-4 h-4 text-emerald-400" />
+              </div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Classroom Health</p>
+              <h3 className="text-3xl font-bold text-slate-900">Optimal</h3>
+              <p className="text-xs text-slate-500 mt-2">SAIE predicts stable behavior patterns for the majority of learners.</p>
+            </div>
+
+            <div className="card-elevated p-8">
+              <div className="flex items-center justify-between mb-6">
+                <div className="p-3 bg-slate-50 rounded-2xl text-slate-600">
+                  <Users className="w-6 h-6" />
+                </div>
+              </div>
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Active Learners</p>
+              <h3 className="text-3xl font-bold text-slate-900">{students?.length || 0}</h3>
+              <p className="text-xs text-slate-500 mt-2">All student nodes are currently active and transmitting logs.</p>
+            </div>
+          </div>
+
+          {/* Recent Student Activity */}
+          <div className="card-elevated p-8">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-xl font-bold text-slate-900">Recent Activity</h2>
+              <Link to="/teacher/students" className="text-xs font-bold text-emerald-600 hover:underline flex items-center gap-1">
+                View All Students <ArrowRight className="w-3 h-3" />
+              </Link>
+            </div>
+            
+            <div className="space-y-4">
+              {recentStudents.map((student, i) => (
+                <div key={i} className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 hover:bg-emerald-50 transition-colors group">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 flex items-center justify-center font-bold text-slate-400 group-hover:text-emerald-600 group-hover:border-emerald-200 transition-all">
+                      {student.name.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="text-sm font-bold text-slate-800">{student.name}</p>
+                      <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Last Log: {student.lastActivity || 'Recently'}</p>
+                    </div>
+                  </div>
+                  <Link to="/teacher/students" className="p-2 text-slate-300 hover:text-emerald-600">
+                    <ArrowRight className="w-4 h-4" />
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Active Alerts List */}
+        <div className="space-y-8">
+          <div className="card-elevated p-8 bg-slate-900 text-white border-none shadow-xl shadow-slate-200">
+            <div className="flex items-center gap-3 mb-8">
+              <div className="p-2 bg-white/10 rounded-xl">
+                <AlertTriangle className="w-5 h-5 text-amber-400" />
+              </div>
+              <h2 className="text-lg font-bold">Priority Alerts</h2>
+            </div>
+
+            <div className="space-y-6">
+              {activeAlerts.length > 0 ? activeAlerts.map((alert, i) => (
+                <div key={i} className="relative pl-6 border-l-2 border-emerald-500/30">
+                  <div className="absolute -left-[5px] top-0 w-2 h-2 rounded-full bg-emerald-500" />
+                  <p className="text-[10px] font-bold text-emerald-400 mb-1 uppercase tracking-wider">{alert.type || 'Behavioral'}</p>
+                  <p className="text-sm font-medium text-slate-300 leading-snug">{alert.message}</p>
+                  <p className="text-[10px] text-slate-500 mt-2 flex items-center gap-1">
+                    <Clock className="w-3 h-3" /> {alert.time || '2m ago'}
+                  </p>
+                </div>
+              )) : (
+                <div className="text-center py-4">
+                  <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">No critical alerts</p>
+                </div>
+              )}
+            </div>
+
+            <Link to="/teacher/alerts" className="block w-full text-center mt-10 py-3 rounded-xl bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-widest hover:bg-white/10 transition-all">
+              See All Notifications
+            </Link>
+          </div>
+
+          <div className="card-elevated p-8 bg-emerald-50 border-emerald-100">
+            <h3 className="text-sm font-bold text-emerald-800 uppercase tracking-widest mb-4">Quick Insight</h3>
+            <p className="text-sm text-emerald-700 leading-relaxed font-medium">
+              Engagement levels typically peak after morning routines. Consider scheduling core learning during this window.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default TeacherHome;
+
+
+
+
+
+
+import React, { useState, useMemo } from 'react';
+import { useApp } from '@/context/AppContext';
+import { 
+  Users, 
+  AlertTriangle, 
+  Search, 
+  LayoutGrid, 
+  List, 
+  ChevronRight,
+  Activity,
+  Bell,
+  CheckCircle2,
+  Brain,
+  Calendar,
+  FileText,
+  ShieldAlert,
+  ArrowUpRight,
+  Filter,
+  LayoutDashboard,
+  LogOut,
+  Target,
+  Sparkles
+} from 'lucide-react';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
+
+const TeacherDashboard = () => {
+  const { students = [], alerts = [], setUser } = useApp();
+  const [viewMode, setViewMode] = useState('grid');
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const stats = useMemo(() => {
+    const highConcern = students.filter(s => s.riskLevel === 'High').length;
+    const interventionNeeded = students.filter(s => s.riskLevel !== 'Low').length;
+
+    return [
+      { label: 'Total Learners', value: students.length, icon: Users, gradient: 'from-emerald-500 to-emerald-700' },
+      { label: 'High Concern', value: highConcern, icon: AlertTriangle, gradient: 'from-rose-500 to-red-600' },
+      { label: 'Interventions', value: interventionNeeded, icon: Brain, gradient: 'from-emerald-600 to-teal-800' },
+      { label: 'IEP Progress', value: '72%', icon: CheckCircle2, gradient: 'from-teal-500 to-emerald-800' },
+    ];
+  }, [students]);
+
+  const classDistribution = [
+    { name: 'Stable', value: 65, color: '#10b981' }, 
+    { name: 'Monitoring', value: 20, color: '#059669' },
+    { name: 'Critical', value: 15, color: '#f43f5e' },
+  ];
+
+  const filteredStudents = students.filter(s => 
+    s.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div className="min-h-screen p-4 md:p-8 text-slate-900 font-sans relative">
+      {/* PROFESSIONAL EMERALD AMBIENCE */}
+      <div className="fixed inset-0 -z-10" style={{
+        background: '#f8fafc',
+        backgroundImage: `
+          radial-gradient(at 0% 0%, #d1fae5 0, transparent 40%), 
+          radial-gradient(at 100% 0%, #ecfdf5 0, transparent 40%)
+        `
+      }} />
+
+      <div className="max-w-7xl mx-auto space-y-8">
+        
+        {/* ✨ LIGHT GLASS HEADER */}
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white/60 backdrop-blur-xl p-8 rounded-[2.5rem] border border-emerald-100 shadow-sm shadow-emerald-900/5">
+          <div className="flex items-center gap-4">
+            <div className="p-3 bg-emerald-600 rounded-2xl shadow-lg shadow-emerald-600/20">
+              <LayoutDashboard className="text-white w-6 h-6" />
+            </div>
+            <div>
+              <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase italic leading-none">Teacher <span className="text-emerald-600">Dashboard</span></h2>
+              <p className="text-[10px] font-black text-emerald-800/60 uppercase tracking-[0.3em] mt-1">Academic Node • Grade Analysis</p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4 w-full md:w-auto">
+            <div className="relative flex-1 md:flex-none">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-400"/>
+              <input
+                type="text"
+                placeholder="Search learner database..."
+                className="pl-11 pr-4 py-3 bg-white border border-emerald-100 rounded-2xl text-sm w-full md:w-72 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all shadow-sm"
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            <div className="flex items-center gap-3">
+              <button className="relative p-3 bg-white border border-emerald-50 rounded-2xl shadow-sm hover:bg-emerald-50 transition-colors">
+                <Bell size={20} className="text-emerald-700" />
+                {alerts.length > 0 && (
+                  <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-emerald-500 rounded-full ring-2 ring-white"/>
+                )}
+              </button>
+              <button 
+                onClick={() => setUser(null)} 
+                className="p-3 rounded-2xl bg-white border border-emerald-50 shadow-sm text-slate-400 hover:text-emerald-600 transition-all"
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          
+          <div className="lg:col-span-3 space-y-8">
+            
+            {/* 📊 KPI GRID */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {stats.map((stat, idx) => (
+                <div key={idx} className="bg-white/80 backdrop-blur-sm border border-emerald-50 p-6 rounded-[2rem] shadow-sm hover:shadow-emerald-900/5 transition-all group">
+                  <div className="flex justify-between items-start mb-4">
+                    <div className={`p-3 rounded-2xl bg-gradient-to-br ${stat.gradient} text-white shadow-lg`}>
+                      <stat.icon size={20} />
+                    </div>
+                    <div className="p-1 rounded-lg group-hover:bg-emerald-50 transition-colors">
+                      <ArrowUpRight size={18} className="text-emerald-200 group-hover:text-emerald-600 transition-all" />
+                    </div>
+                  </div>
+                  <p className="text-[10px] font-black text-emerald-800/40 uppercase tracking-widest">{stat.label}</p>
+                  <h3 className="text-2xl font-black mt-1 text-slate-800 tracking-tight">{stat.value}</h3>
+                </div>
+              ))}
+            </div>
+
+            {/* 📋 LEARNER DIRECTORY */}
+            <div className="space-y-4">
+              <div className="flex justify-between items-center px-2">
+                <h2 className="text-xl font-black text-slate-800 uppercase tracking-tighter italic flex items-center gap-2">
+                  <Users size={22} className="text-emerald-600" /> Learner <span className="text-emerald-600">Database</span>
+                </h2>
+                <div className="flex bg-emerald-50 p-1.5 rounded-2xl border border-emerald-100">
+                  <button 
+                    onClick={() => setViewMode('grid')}
+                    className={`p-2 rounded-xl transition-all ${viewMode === 'grid' ? 'bg-white shadow-sm text-emerald-600' : 'text-emerald-300'}`}
+                  >
+                    <LayoutGrid size={18}/>
+                  </button>
+                  <button 
+                    onClick={() => setViewMode('list')}
+                    className={`p-2 rounded-xl transition-all ${viewMode === 'list' ? 'bg-white shadow-sm text-emerald-600' : 'text-emerald-300'}`}
+                  >
+                    <List size={18}/>
+                  </button>
+                </div>
+              </div>
+
+              <div className={viewMode === 'grid' ? "grid md:grid-cols-2 gap-4" : "flex flex-col gap-4"}>
+                {filteredStudents.map(student => (
+                  <div key={student.id} className="bg-white/80 border border-emerald-50 p-6 rounded-[2.5rem] shadow-sm hover:shadow-xl hover:shadow-emerald-900/5 transition-all group">
+                    <div className="flex justify-between items-start mb-6">
+                      <div className="flex gap-4">
+                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center font-black text-xl border border-emerald-100 shadow-inner group-hover:bg-emerald-600 group-hover:text-white transition-all">
+                          {student.name.charAt(0)}
+                        </div>
+                        <div>
+                          <h4 className="font-black text-slate-800 text-lg uppercase tracking-tighter italic leading-none mb-2">{student.name}</h4>
+                          <span className="text-[9px] font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg uppercase tracking-widest">
+                            {student.condition || 'Verified Profile'}
+                          </span>
+                        </div>
+                      </div>
+                      <span className={`px-3 py-1 rounded-full text-[10px] font-black tracking-widest uppercase border ${
+                        student.riskLevel === 'High' ? 'bg-red-50 border-red-100 text-red-600' :
+                        student.riskLevel === 'Moderate' ? 'bg-amber-50 border-amber-100 text-amber-600' :
+                        'bg-emerald-50 border-emerald-100 text-emerald-600'
+                      }`}>
+                        {student.riskLevel} Risk
+                      </span>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="bg-emerald-50/50 rounded-2xl p-4 border border-emerald-100/50 relative overflow-hidden">
+                        <div className="flex justify-between items-center mb-2">
+                           <p className="text-[9px] font-black text-emerald-800/40 uppercase tracking-[0.2em] flex items-center gap-1">
+                             <Sparkles size={10} /> AI Diagnostic Insight
+                           </p>
+                           <span className="text-[9px] font-black text-emerald-600 italic">98% Node Match</span>
+                        </div>
+                        <p className="text-xs font-bold text-emerald-900/70 leading-relaxed italic">
+                          "{student.aiInsight || "Student node demonstrates consistent progress in peer interaction clusters."}"
+                        </p>
+                      </div>
+                      
+                      <div className="flex items-center justify-between pt-2">
+                        <div className="flex -space-x-2">
+                          <div className="w-8 h-8 rounded-xl bg-emerald-900 border-2 border-white flex items-center justify-center text-[10px] text-emerald-400 font-black">IEP</div>
+                          <div className="w-8 h-8 rounded-xl bg-emerald-500 border-2 border-white flex items-center justify-center text-[10px] text-white font-black">AI</div>
+                        </div>
+                        <button className="text-[10px] font-black text-emerald-900 hover:text-emerald-600 flex items-center gap-2 uppercase tracking-widest transition-all group/btn">
+                          Launch Profile <ChevronRight size={16} className="group-hover/btn:translate-x-1 transition-transform"/>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* 📈 SIDEBAR ANALYTICS */}
+          <div className="space-y-6">
+            <div className="bg-white/80 backdrop-blur-xl border border-emerald-100 p-8 rounded-[2.5rem] shadow-sm">
+              <h3 className="text-[10px] font-black mb-8 flex items-center gap-2 text-emerald-800 uppercase tracking-[0.2em]">
+                <Activity size={18} className="text-emerald-500"/> Node Distribution
+              </h3>
+              <div className="h-48 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={classDistribution} dataKey="value" innerRadius={55} outerRadius={75} paddingAngle={10}>
+                      {classDistribution.map((entry, i) => (
+                        <Cell key={i} fill={entry.color} stroke="none" />
+                      ))}
+                    </Pie>
+                    <Tooltip contentStyle={{borderRadius: '16px', border: 'none', fontWeight: 'bold'}} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="mt-8 space-y-3">
+                {classDistribution.map((item, i) => (
+                  <div key={i} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-2.5 h-2.5 rounded-full" style={{backgroundColor: item.color}} />
+                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{item.name}</span>
+                    </div>
+                    <span className="text-xs font-black text-emerald-900">{item.value}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* 🚨 PRIORITY ALERTS */}
+            <div className="bg-emerald-950 p-8 rounded-[2.5rem] text-white shadow-2xl shadow-emerald-900/20 border border-emerald-800">
+              <h3 className="text-[10px] font-black mb-6 flex items-center gap-2 text-emerald-400 uppercase tracking-[0.2em]">
+                <ShieldAlert size={18} className="text-emerald-400"/> Critical Anomalies
+              </h3>
+              {alerts.length === 0 ? (
+                <div className="py-4 text-center">
+                  <p className="text-[10px] font-bold text-emerald-600 uppercase italic">All nodes stable.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {alerts.slice(0, 3).map((alert, i) => (
+                    <div key={i} className="bg-emerald-900/50 backdrop-blur-md p-4 rounded-2xl border border-emerald-800">
+                      <p className="text-[9px] font-black text-emerald-400 uppercase tracking-widest mb-1">{alert.type}</p>
+                      <p className="text-xs font-medium text-emerald-50 leading-tight">{alert.message}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <button className="w-full mt-8 bg-emerald-500 hover:bg-emerald-400 text-emerald-950 py-5 rounded-[1.5rem] text-[10px] font-black uppercase tracking-widest transition-all shadow-xl shadow-emerald-500/10 active:scale-95">
+                Protocol Audit
+              </button>
+            </div>
+            
+            {/* QUICK ACTIONS */}
+            <div className="grid grid-cols-2 gap-4">
+              <button className="flex flex-col items-center gap-3 p-6 bg-white/60 backdrop-blur-md border border-emerald-100 rounded-[2.2rem] hover:bg-emerald-600 group transition-all">
+                <FileText className="text-emerald-600 group-hover:text-white" size={24} />
+                <span className="text-[9px] font-black text-emerald-900 group-hover:text-white uppercase tracking-tighter">Draft IEP</span>
+              </button>
+              <button className="flex flex-col items-center gap-3 p-6 bg-white/60 backdrop-blur-md border border-emerald-100 rounded-[2.2rem] hover:bg-emerald-600 group transition-all">
+                <Calendar className="text-emerald-600 group-hover:text-white" size={24} />
+                <span className="text-[9px] font-black text-emerald-900 group-hover:text-white uppercase tracking-tighter">Schedule</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* FOOTER STAT */}
+      <div className="mt-12 mb-8 bg-emerald-900 text-emerald-100 py-3 px-8 rounded-full w-fit mx-auto shadow-lg">
+        <p className="text-[10px] font-black uppercase tracking-[0.2em]">Institutional Sync Active: {students.length} Learners Verified</p>
+      </div>
+    </div>
+  );
+};
+
+export default TeacherDashboard;
+
+
+
+
+
+
+old version of the new revision
+
+
+import React, { useState, useMemo, useRef, useEffect } from 'react';  
+import { useNavigate } from 'react-router-dom';
+import { 
+  Search, Plus, Eye, User, Activity, GraduationCap, ChevronLeft, 
+  Archive, LayoutGrid, List, MessageSquare, RefreshCcw, Send,
+  Camera, Edit2, Sparkles, X, ChevronRight, ListFilter, LogOut, TrendingUp, ShieldAlert,
+  AlertCircle, BrainCircuit, CheckCircle2, ShieldCheck, Zap, Info, Target, BookOpen, Circle, Mail, Heart,
+  Phone, Video, Paperclip
+} from 'lucide-react';
+import { useApp } from '@/context/AppContext';
+import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from "sonner";
+import TeacherProfile from './TeacherProfile';
+import { 
+  Radar, RadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer,
+  AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip 
+} from 'recharts';
+
+const GRADE_LEVELS = ["Grade 1", "Grade 2", "Grade 3"];
+
+const TeacherHome: React.FC = () => {
+  const { user, sendMessage, messages } = useApp();
+  const navigate = useNavigate();
+
+  // --- STUDENT DATA ---
+  const studentNames = [
+    "Panganiban, Bea Angelu R.", "Dadap, Shaira B.", "Capulong, Princess M.", 
+    "Oliveros, Amiel S.", "Austrial, Lawrence Andrei E.", "Pili, Maria Chriswell C.", 
+    "Mendoza, Kyle Michael M.", "Rodriguez, Zcedrich", "Audije, Krystal", 
+    "Morillo, Irish", "Felipe, Kathlene", "Fernandez, Julliane", "Exconde, Kateley G.", 
+    "Oasin, Philip Jhon Ian M.", "Alarmado, Paulyn C.", "Anenias, Queen Leane M.", 
+    "Albano, Noelita C.", "Hernandez, Wyne Andrei", "Ramos, Charles John L.", 
+    "Abad, Franz Dianne G.", "Viriña, John Kurt Aldrin A.", "Umali, Randel B.", 
+    "Ceniza, Krisan Chine", "Elamparo, Justine", "Meramonte, Lucky", 
+    "Viado, Jeron", "Urrete, Kervz", "Romero, Jolo S.", "Fernandez, Erica M.", 
+    "Amurao, Kyla Grace A.", "Coronado, Bhea Bernadette P."
+  ];
+
+  const mockStudents = useMemo(() => {
+    return studentNames.map((fullName, i) => {
+      const parts = fullName.split(',').map(p => p.trim());
+      const lastName = parts[0] || "";
+      const firstName = parts[1] || "";
+      const initials = (firstName.charAt(0) + lastName.charAt(0)).toUpperCase();
+      const emailName = lastName.toLowerCase().replace(/\s+/g, '') + i;
+
+      return {
+        id: i + 1,
+        name: fullName,
+        grade: GRADE_LEVELS[i % 3],
+        initials: initials || "ST",
+        riskLevel: ['Low', 'Moderate', 'High'][i % 3],
+        email: `${emailName}@plsp.edu.ph`,
+        parentName: `Guardian of ${firstName} ${lastName}`,
+      };
+    });
+  }, []);
+
+  // --- STATS CALCULATION ---
+  const totalStudentsCount = mockStudents.length;
+  const highRiskCount = useMemo(() => 
+    mockStudents.filter(s => s.riskLevel === 'High').length
+  , [mockStudents]);
+
+  // --- STATES ---
+  const [layoutMode, setLayoutMode] = useState<'grid' | 'list'>('grid');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [view, setView] = useState<'home' | 'archived'>('home');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isTeacherProfileModalOpen, setIsTeacherProfileModalOpen] = useState(false); 
+  const [archivedMockIds, setArchivedMockIds] = useState<number[]>([]);
+  
+  // Filter States
+  const [isAddDropdownOpen, setIsAddDropdownOpen] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filterGrade, setFilterGrade] = useState('all');
+  const [filterRisk, setFilterRisk] = useState('all'); // New state for risk filter
+  const [sortByRisk, setSortByRisk] = useState(false); // New state for risk sorting
+  const [selectedIds, setSelectedIds] = useState<number[]>([]);
+
+  // Profile States
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [tempProfileName, setTempProfileName] = useState(user?.name || "Instructor");
+  const [tempProfileEmail, setTempProfileEmail] = useState(user?.email || "instructor@plsp.edu.ph");
+  const [profileImage, setProfileImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // IEP States
+  const [isIEPModalOpen, setIsIEPModalOpen] = useState(false);
+  const [iepStudentSearch, setIepStudentSearch] = useState("");
+  const [obsInput, setObsInput] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  // --- PROGRESS MODAL STATES ---
+  const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
+  const [progressTab, setProgressTab] = useState<'personal' | 'analytics'>('personal');
+  const [selectedProgressId, setSelectedProgressId] = useState<number | null>(null);
+
+  // --- MESSAGE MODAL STATES ---
+  const [isMessageModalOpen, setIsMessageModalOpen] = useState(false);
+  const [activeChatStudent, setActiveChatStudent] = useState<any | null>(null);
+  const [chatInput, setChatInput] = useState("");
+  const [viewingMessageInsights, setViewingMessageInsights] = useState(false);
+
+  // --- TYPING INDICATOR LOGIC ---
+  const [isParentTyping, setIsParentTyping] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesTopRef = useRef<HTMLDivElement>(null);
+  const lastChatStudentId = useRef<number | null>(null);
+
+
+  // --- QUICK UPDATE REVIEW STATES ---
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
+  const conversation = useMemo(() => {
+    if (!activeChatStudent || !user?.name) return [];
+    const parentName = activeChatStudent.parentName;
+    return messages.filter(
+      (m: any) => (m.from === user.name && m.to === parentName) || (m.from === parentName && m.to === user.name)
+    );
+  }, [messages, activeChatStudent, user]);
+
+  // Handle Scroll Logic: Top for new students, Bottom for new messages/typing
+  useEffect(() => {
+    if (activeChatStudent?.id !== lastChatStudentId.current) {
+      // New student selected: Instantly reset view to top
+      messagesTopRef.current?.scrollIntoView({ behavior: "auto" });
+      lastChatStudentId.current = activeChatStudent?.id;
+    } else {
+      // Same student, content changed: Smoothly scroll to latest message
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [conversation, isParentTyping, activeChatStudent?.id]);
+
+  // Simulate parent typing when modal opens for realism
+  useEffect(() => {
+    if (isMessageModalOpen && activeChatStudent) {
+      const timer = setTimeout(() => setIsParentTyping(true), 1200);
+      const stopTimer = setTimeout(() => setIsParentTyping(false), 4000);
+      return () => { clearTimeout(timer); clearTimeout(stopTimer); };
+    }
+  }, [isMessageModalOpen, activeChatStudent]);
+
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!chatInput.trim() || !activeChatStudent || !user?.name) return;
+
+    sendMessage({
+      from: user.name,
+      to: activeChatStudent.parentName,
+      content: chatInput,
+      timestamp: new Date().toLocaleString(),
+      read: false,
+    });
+    setChatInput("");
+
+    // Simulate parent responding/typing after teacher sends a message
+    setTimeout(() => {
+      setIsParentTyping(true);
+      setTimeout(() => setIsParentTyping(false), 3000);
+    }, 1500);
+  };
+
+  const initiateCall = (type: 'voice' | 'video', name: string) => {
+    toast.info(`Initializing secure ${type} link with ${name}...`, {
+      icon: type === 'video' ? <Video size={16}/> : <Phone size={16}/>
+    });
+  };
+
+  const [pendingQuickUpdate, setPendingQuickUpdate] = useState<{ student: any, message: string } | null>(null);
+
+  // Mock metrics for the progress modal (aligned with TeacherProgress structure)
+  const progressData = useMemo(() => {
+    return mockStudents.map(s => ({
+      ...s,
+      condition: s.riskLevel === 'High' ? "Autism Spectrum" : "Cerebral Palsy / ID",
+      reliability: 94,
+      behavior: { 
+        frequency: s.riskLevel === 'High' ? "High" : "Moderate", 
+        severity: s.riskLevel === 'High' ? "Moderate" : "Low", 
+        trend: s.riskLevel === 'High' ? "Worsening" : "Improving" 
+      },
+      academic: { taskCompletion: 42, participation: 70 },
+      context: { criticalTime: "12:00 PM", subjectTrigger: "Writing Tasks" },
+      interventionHistory: { lastStrategy: "Short Break", effectiveness: 85 },
+      iep: { 
+        communication: s.riskLevel === 'High' ? "Non-verbal" : "Limited Speech", 
+        motor: "One-hand movement", 
+        support: "Assistive tools required" 
+      },
+      competency: [
+        { subject: 'Communication', baseline: 15, current: 48 },
+        { subject: 'Motor Skills', baseline: 10, current: 35 },
+        { subject: 'Social Skills', baseline: 25, current: 62 },
+        { subject: 'Stability', baseline: 30, current: 78 },
+        { subject: 'Focus', baseline: 20, current: 50 },
+      ],
+      hourlyFocus: [
+        { time: '8AM', level: 85 }, { time: '10AM', level: 90 },
+        { time: '12PM', level: 35 }, { time: '2PM', level: 60 }
+      ]
+    }));
+  }, [mockStudents]);
+
+  const activeProgressStudent = useMemo(() => {
+    return progressData.find(s => s.id === selectedProgressId) || progressData[0];
+  }, [progressData, selectedProgressId]);
+
+  // --- IEP FILTER LOGIC ---
+  const filteredIepStudents = useMemo(() => {
+    return studentNames.filter(name => 
+      name.toLowerCase().includes(iepStudentSearch.toLowerCase())
+    );
+  }, [iepStudentSearch, studentNames]);
+
+  const aiAnalysis = useMemo(() => {
+    if (!activeProgressStudent) return null;
+    const s = activeProgressStudent;
+    let result = { rec: "", exp: "", tag: "Stable", color: "from-emerald-500 to-emerald-700", icon: <ShieldCheck size={18}/> };
+
+    if (s.iep.motor.includes("One-hand") && s.academic.taskCompletion < 50) {
+      result = {
+        rec: "Switch to Voice-to-Text or Digital Tracing",
+        exp: `Low task completion (${s.academic.taskCompletion}%) identified as a physical barrier linked to ${s.iep.motor}. Recommendation: bypass traditional writing.`,
+        tag: "Barrier Detected",
+        color: "from-emerald-600 to-teal-700",
+        icon: <Zap size={18}/>
+      };
+    } 
+    else if (s.behavior.trend === "Worsening") {
+      result = {
+        rec: "Deploy De-escalation Protocol",
+        exp: `Pattern alert: ${s.behavior.frequency} frequency triggers detected during ${s.context.subjectTrigger}. Environmental stressors peak at ${s.context.criticalTime}.`,
+        tag: "Critical Alert",
+        color: "from-emerald-700 to-emerald-900",
+        icon: <AlertCircle size={18}/>
+      };
+    }
+    else {
+      result = {
+        rec: `Maintain: ${s.interventionHistory.lastStrategy}`,
+        exp: `Strategy shows ${s.interventionHistory.effectiveness}% efficacy. Internal node synchronization confirms optimal responsiveness to this sensory path.`,
+        tag: "Optimal Path",
+        color: "from-emerald-500 to-teal-600",
+        icon: <CheckCircle2 size={18}/>
+      };
+    }
+    return result;
+  }, [activeProgressStudent]);
+
+  const itemsPerPage = layoutMode === 'grid' ? 6 : 8;
+
+  // --- HANDLERS ---
+  const handleSyncAndGenerate = () => {
+    if (!obsInput.trim()) return toast.error("Please provide observations first.");
+    setIsGenerating(true);
+    const loadToast = toast.loading("Analyzing student behavior...");
+    
+    setTimeout(() => {
+      setIsGenerating(false);
+      toast.dismiss(loadToast);
+      toast.success("IEP Report Generated Successfully!");
+      setIsIEPModalOpen(false);
+      setObsInput("");
+    }, 2000);
+  };
+
+  const handleQuickUpdate = (student: any) => {
+    if (!user?.name) {
+      toast.error("Teacher name not available to send message.");
+      return;
+    }
+
+    const templates: Record<string, string> = {
+      High: `URGENT: Behavioral Alert for ${student.name}.\n\nOur SAIE system has detected a High risk level. We are implementing immediate intervention protocols. Please review the detailed insights in the portal or contact me directly.`,
+      Moderate: `Quick Update for ${student.name}:\n\n${student.name} is currently at a Moderate risk level. We are seeing some behavioral fluctuations and are adjusting support strategies. Consistency at home is encouraged.`,
+      Low: `Great news for ${student.name}!\n\n${student.name} is showing excellent stability and is currently at a Low risk level. All classroom systems are nominal. Keep up the great work!`
+    };
+
+    const messageContent = templates[student.riskLevel] || 
+      `Quick Update for ${student.name}:\n\n${student.name} is currently at a ${student.riskLevel} risk level. All systems nominal.`;
+
+    setPendingQuickUpdate({ student, message: messageContent });
+    setIsReviewModalOpen(true);
+  };
+
+  const confirmQuickUpdate = () => {
+    if (!pendingQuickUpdate || !sendMessage || !user?.name) return;
+
+    sendMessage({
+      from: user.name,
+      to: pendingQuickUpdate.student.parentName,
+      content: pendingQuickUpdate.message,
+      timestamp: new Date().toLocaleString(),
+      read: false,
+    });
+
+    toast.success(`Quick update sent to ${pendingQuickUpdate.student.parentName}.`);
+    setIsReviewModalOpen(false);
+    setPendingQuickUpdate(null);
+  };
+
+  const handleArchive = (id: number, name: string) => {
+    setArchivedMockIds(prev => [...prev, id]);
+    toast.success(`${name} moved to archives.`);
+  };
+
+  const handleRestore = (id: number) => {
+    setArchivedMockIds(prev => prev.filter(item => item !== id));
+    toast.success("Student record restored.");
+  };
+
+  const handleSelectOne = (id: number) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const handleSelectPage = () => {
+    const pageIds = displayStudents.map(s => s.id);
+    const allSelected = pageIds.every(id => selectedIds.includes(id));
+    if (allSelected) {
+      setSelectedIds(prev => prev.filter(id => !pageIds.includes(id)));
+    } else {
+      setSelectedIds(prev => [...new Set([...prev, ...pageIds])]);
+    }
+  };
+
+  const handleBulkAction = () => {
+    if (view === 'home') {
+      setArchivedMockIds(prev => [...new Set([...prev, ...selectedIds])]);
+      toast.success(`${selectedIds.length} students moved to archives.`);
+    } else {
+      setArchivedMockIds(prev => prev.filter(id => !selectedIds.includes(id)));
+      toast.success(`${selectedIds.length} student records restored.`);
+    }
+    setSelectedIds([]);
+  };
+
+  const filteredStudents = useMemo(() => {
+    const riskPriority: Record<string, number> = { 'High': 3, 'Moderate': 2, 'Low': 1 };
+
+    let result = mockStudents.filter(s => {
+      const matchesSearch = s.name.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesGrade = filterGrade === 'all' || s.grade === filterGrade;
+      const matchesRisk = filterRisk === 'all' || s.riskLevel === filterRisk; // New risk filter
+      const isArchived = archivedMockIds.includes(s.id);
+      return view === 'home' ? (matchesSearch && matchesGrade && matchesRisk && !isArchived) : (matchesSearch && matchesGrade && matchesRisk && isArchived);
+    });
+
+    if (sortByRisk) {
+      result = [...result].sort((a, b) => riskPriority[b.riskLevel] - riskPriority[a.riskLevel]);
+    }
+
+    return result;
+  }, [mockStudents, searchTerm, filterGrade, filterRisk, archivedMockIds, view, sortByRisk]);
+
+  const totalPages = Math.ceil(filteredStudents.length / itemsPerPage);
+  const displayStudents = filteredStudents.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+
+  return (
+    <div className="min-h-screen bg-[#f8fafc] p-4 md:p-8 font-sans text-slate-800 relative overflow-x-hidden">
+      <div className="fixed inset-0 -z-10" style={{ background: '#f8fafc', backgroundImage: `radial-gradient(at 0% 0%, #d1fae5 0, transparent 40%), radial-gradient(at 100% 0%, #ecfdf5 0, transparent 40%)` }} />
+
+      {/* HEADER */}
+      <header className="w-full flex items-center justify-between bg-white/70 backdrop-blur-xl rounded-[2rem] md:rounded-full px-4 md:px-10 py-3 mb-12 border border-emerald-100 shadow-xl relative z-50">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 bg-emerald-600 rounded-full flex items-center justify-center shadow-lg">
+            <GraduationCap className="text-white w-6 h-6" />
+          </div>
+          <span className="font-black text-emerald-950 text-xl tracking-tighter uppercase italic">Sned<span className="text-emerald-600">Link+</span></span>
+        </div>
+        
+        <div className="flex items-center gap-4">
+          {/* --- QUICK ADD DROPDOWN --- */}
+          <div className="relative">
+            <button 
+              onClick={() => setIsAddDropdownOpen(!isAddDropdownOpen)}
+              className="p-2.5 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition-all shadow-lg active:scale-95 flex items-center group"
+              title="Add..."
+            >
+              <Plus size={18} strokeWidth={3} className={`${isAddDropdownOpen ? 'rotate-45' : 'group-hover:rotate-90'} transition-transform duration-300`} />
+            </button>
+
+            <AnimatePresence>
+              {isAddDropdownOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setIsAddDropdownOpen(false)} />
+                  <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    className="absolute right-0 mt-3 w-48 bg-white rounded-2xl shadow-2xl border border-emerald-100 overflow-hidden z-50 py-2"
+                  >
+                    <button 
+                      onClick={() => {
+                        setIsIEPModalOpen(true);
+                        setIsAddDropdownOpen(false);
+                      }}
+                      className="w-full px-5 py-3.5 flex items-center gap-3 hover:bg-emerald-50 transition-colors text-left"
+                    >
+                      <div className="p-1.5 bg-emerald-100 rounded-lg text-emerald-600">
+                        <Sparkles size={14} />
+                      </div>
+                      <span className="text-[10px] font-black text-emerald-900 uppercase tracking-widest">Add IEP</span>
+                    </button>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+          </div>
+
+          <nav className="hidden md:flex items-center gap-2 bg-emerald-50 p-1.5 rounded-full border border-emerald-100">
+            <button onClick={() => {setView('home'); setCurrentPage(1); setSelectedIds([]);}} className={`${view === 'home' ? 'bg-emerald-600 text-white shadow-md' : 'text-emerald-700'} px-10 py-2.5 rounded-full font-black text-[10px] uppercase tracking-widest transition-all`}>Home</button>
+            <button onClick={() => {setView('archived'); setCurrentPage(1); setSelectedIds([]);}} className={`${view === 'archived' ? 'bg-emerald-600 text-white shadow-md' : 'text-emerald-700'} px-8 py-2.5 rounded-full font-black text-[10px] uppercase tracking-widest transition-all`}>Archived</button>
+          </nav>
+
+          <button onClick={() => setIsTeacherProfileModalOpen(true)} className="flex items-center gap-3 pl-2 group">
+            <div className="hidden sm:flex flex-col items-end leading-tight">
+              <p className="text-[9px] font-bold text-emerald-600/60 uppercase tracking-widest"> Teacher </p>
+              <p className="font-black text-emerald-950 text-xs">{tempProfileName}</p>
+            </div>
+            <div className="w-10 h-10 rounded-2xl overflow-hidden border-2 border-white shadow-md bg-emerald-100 flex items-center justify-center">
+               {profileImage ? <img src={profileImage} className="w-full h-full object-cover" alt="Profile" /> : <User className="text-emerald-600" />}
+            </div>
+          </button>
+        </div>
+      </header>
+
+      <main className="w-full px-4 md:px-10">
+        <div className="mb-10 flex flex-col gap-8">
+          <div className="flex flex-col md:flex-row md:items-end gap-6">
+            <h1 className="text-5xl sm:text-7xl font-black text-emerald-950 tracking-tighter uppercase italic leading-none">
+              {view === 'home' ? 'Home' : 'Archived'}
+            </h1>
+            
+            {/* STATS BADGES */}
+            <div className="flex gap-3 mb-1">
+              <div className="px-6 py-3 bg-white/50 backdrop-blur-md border border-emerald-100 rounded-[1.5rem] shadow-sm">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Total Learners</p>
+                <p className="text-xl font-black text-emerald-900 leading-none">{totalStudentsCount}</p>
+              </div>
+              <div className="px-6 py-3 bg-rose-500/10 backdrop-blur-md border border-rose-500/20 rounded-[1.5rem] shadow-sm">
+                <p className="text-[9px] font-black text-rose-400 uppercase tracking-widest leading-none mb-1">Critical Risk</p>
+                <p className="text-xl font-black text-rose-600 leading-none">{highRiskCount}</p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex flex-col md:flex-row items-center gap-4 w-full">
+            {/* SEARCH & LAYOUT GROUP */}
+            <div className="flex-1 flex items-center bg-white rounded-full p-1.5 shadow-xl border border-emerald-50 w-full">
+              <Search className="w-4 h-4 text-emerald-300 ml-5" />
+              <input 
+                type="text"
+                value={searchTerm}
+                onChange={(e) => {setSearchTerm(e.target.value); setCurrentPage(1);}}
+                placeholder=lex-1 bg-transparent py-3 px-3 focus:outline-none font-bold text-slate-700 text-sm"
+              />
+              {searchTerm && (
+                <button 
+                  onClick={() => {setSearchTerm(""); setCurrentPage(1);}}
+                  className="p-2 text-emerald-300 hover:text-emerald-600 transition-colors"
+                >
+                  <X size={16} />
+                </button>
+              )}iew === 'home' && (
+              {'v>
+              )}
+            </div>
+
+            {/* COMPACT ACTION RIBBON */}
+            <div className="flex items-center gap-2 bg-white/50 backdrop-blur-md p-1.5 rounded-3xl border border-emerald-100 shadow-sm">
+              {/* Selection Toggle */}
+              <button
+                onClick={handleSelectPage}
+                title="Select Page"
+                className={`p-3 rounded-2xl transition-all ${
+                  displayStudents.length > 0 && displayStudents.every(s => selectedIds.includes(s.id))
+                  ? 'bg-emerald-900 text-white shadow-md' 
+                  : 'bg-white text-emerald-900 border border-emerald-50 hover:bg-emerald-50'
+                }`}
+              >
+                <Circle size={18} />
+              </button>
+
+              {/* Sort Toggle */}
+              <button
+                onClick={() => { setSortByRisk(!sortByRisk); setCurrentPage(1); }}
+                title="Sort by Risk"
+                className={`p-3 rounded-2xl transition-all ${sortByRisk ? 'bg-emerald-600 text-white shadow-md' : 'bg-white text-emerald-600 border border-emerald-50 hover:bg-emerald-50'}`}
+              >
+                <TrendingUp size={18} />
+              </button>
+
+              <div className="h-8 w-px bg-emerald-100 mx-1" />
+
+              {/* Risk Filter Toggle */}
+              <button
+                onClick={() => { setFilterRisk(filterRisk === 'High' ? 'all' : 'High'); setCurrentPage(1); }}
+                title="Toggle High Risk Only"
+                className={`p-3 rounded-2xl transition-all ${filterRisk === 'High' ? 'bg-rose-600 text-white shadow-md' : 'bg-white text-rose-600 border border-rose-50 hover:bg-rose-50'}`}
+              >
+                <ShieldAlert size={18} />
+              </button>
+
+              {/* Bulk Action (Only when items selected) */}
+              <AnimatePresence>
+                {selectedIds.length > 0 && (
+                  <motion.button
+                    initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }}
+                    title={view === 'home' ? "Archive Selected" : "Restore Selected"}
+                    onClick={handleBulkAction}
+                    className={`flex items-center gap-2 px-4 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest text-white shadow-lg transition-all ${view === 'home' ? 'bg-red-600' : 'bg-emerald-600'}`}
+                  >
+                    {view === 'home' ? <Archive size={14} /> : <RefreshCcw size={14} />}
+                    {selectedIds.length}
+                  </motion.button>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+        </div>
+
+        {/* STUDENT DISPLAY */}
+        {layoutMode === 'grid' && view !== 'archived' ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 gap-y-12 mb-12">
+            {displayStudents.map((student) => (
+              <motion.div key={student.id} layout initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="group relative">
+                <div className="relative min-h-[260px] bg-gradient-to-br from-emerald-600 via-emerald-700 to-emerald-900 rounded-[3rem] p-8 shadow-2xl overflow-hidden">
+                  {/* Grid Checkbox */}
+                  <div className={`absolute top-6 left-6 z-20 transition-all duration-300 ${selectedIds.includes(student.id) || selectedIds.length > 0 ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                    <input 
+                      type="checkbox" 
+                      checked={selectedIds.includes(student.id)}
+                      onChange={() => handleSelectOne(student.id)}
+                      className={`w-4 h-4 rounded-full border-2 transition-all cursor-pointer appearance-none checked:bg-white checked:border-white border-white/40 bg-white/10`}
+                    />
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center border border-white/20 text-white font-black text-xl">{student.initials}</div>
+                    <div className="flex-1 overflow-hidden">
+                      <span className="block text-white text-lg font-black uppercase tracking-tighter truncate">{student.name}</span>
+                      <span className="text-emerald-300 text-[9px] font-black uppercase tracking-widest">{student.grade}</span>
+                    </div>
+                  </div>
+                  {/* Grid specific Archive/Restore button */}
+                  <div className="absolute top-6 right-6"> {/* Always show restore in archived view */}
+                    <button title="Archive Student" onClick={() => handleArchive(student.id, student.name)} className="p-3 bg-white/10 hover:bg-red-500/20 rounded-2xl text-white/50 hover:text-white transition-all"><Archive size={16}/></button>
+                  </div>
+                </div>
+                {/* ACTION BAR (Synchronized) */}
+                <div className="bg-white mx-6 -mt-16 rounded-[2.5rem] p-5 flex justify-center items-center border border-emerald-50 shadow-2xl relative z-10">
+                  <div className="flex gap-4">
+                    <button 
+                      title="View Progress Analytics"
+                      onClick={() => { setSelectedProgressId(student.id); setIsProgressModalOpen(true); }}
+                      className="p-3 rounded-2xl transition-colors shadow-sm bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white"
+                    >
+                      <Activity size={18} />
+                    </button>
+                    <button
+                      title="Chat with Parent"
+                      onClick={() => { setActiveChatStudent(student); setIsMessageModalOpen(true); }}
+                      className="p-3 rounded-2xl text-white transition-all shadow-lg bg-emerald-950 hover:bg-emerald-600"
+                    >
+                      <MessageSquare size={18} />
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-4 mb-12"> {/* Always list view for archived */}
+            {displayStudents.map((student) => (
+              <motion.div key={student.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="bg-white p-5 rounded-[2.5rem] border border-emerald-50 flex items-center justify-between shadow-md hover:shadow-xl transition-shadow group">
+                <div className="flex items-center gap-5">
+                  {/* List Checkbox */}
+                  <div className={`transition-all duration-300 ${selectedIds.includes(student.id) || selectedIds.length > 0 ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
+                    <input 
+                      type="checkbox" 
+                      checked={selectedIds.includes(student.id)}
+                      onChange={() => handleSelectOne(student.id)}
+                      className={`w-4 h-4 rounded-full border-2 transition-all cursor-pointer appearance-none checked:bg-emerald-600 checked:border-emerald-600 border-emerald-100 bg-emerald-50`}
+                    />
+                  </div>
+                  <div className="w-14 h-14 bg-emerald-100 rounded-[1.2rem] flex items-center justify-center font-black text-sm text-emerald-700 shadow-inner group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                    {student.initials}
+                  </div>
+                  <div>
+                    <p className="font-black text-slate-800 uppercase text-sm tracking-tight">{student.name}</p>
+                    <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">{student.grade}</p>
+                  </div>
+                </div>
+                {/* ACTION BAR (Synchronized with Grid) */}
+                <div className="flex items-center gap-3"> {/* Only show restore in archived view */}
+                  {view === 'archived' ? (
+                    <button title="Restore Student" onClick={() => handleRestore(student.id)} className="p-3 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all"><RefreshCcw size={16}/></button>
+                  ) : (
+                    <div className="flex items-center gap-2 pr-4 border-r border-slate-100">
+                      <button 
+                        title="View Progress Analytics"
+                        onClick={() => { setSelectedProgressId(student.id); setIsProgressModalOpen(true); }}
+                        className="p-3 rounded-xl transition-colors bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white"
+                      >
+                        <Activity size={16} />
+                      </button>
+                      <button title="Chat with Parent" onClick={() => { setActiveChatStudent(student); setIsMessageModalOpen(true); }} className="p-3 rounded-xl text-white transition-colors bg-emerald-950 hover:bg-emerald-600"><MessageSquare size={16} /></button>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        )}
+
+        {/* --- PAGINATION CONTROLS --- */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-center gap-4 mt-8 pb-12">
+            <button
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="p-3 rounded-2xl bg-white border border-emerald-100 text-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-emerald-50 transition-all shadow-sm"
+            >
+              <ChevronLeft size={20} />
+            </button>
+            
+            <div className="flex items-center gap-2 bg-white px-6 py-3 rounded-2xl border border-emerald-100 shadow-sm">
+              <span className="text-xs font-black text-emerald-900 uppercase tracking-widest">
+                Page {currentPage} of {totalPages}
+              </span>
+            </div>
+
+            <button
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="p-3 rounded-2xl bg-white border border-emerald-100 text-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-emerald-50 transition-all shadow-sm"
+            >
+              <ChevronRight size={20} />
+            </button>
+          </div>
+        )}
+      </main>
+
+      {/* --- PROGRESS ANALYTICS MODAL --- */}
+      <AnimatePresence>
+        {isProgressModalOpen && activeProgressStudent && (
+          <div className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-emerald-950/60 backdrop-blur-md overflow-y-auto">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-white rounded-[3rem] shadow-2xl w-full max-w-lg relative my-8 border border-emerald-100 flex flex-col max-h-[85vh] overflow-hidden"
+            >
+              {/* HEADER: COMPACT PROFILE */}
+              <div className="p-8 pb-4 flex items-center gap-6 border-b border-emerald-50">
+                <div className={`w-20 h-20 rounded-[1.5rem] text-white flex items-center justify-center font-black text-3xl shadow-xl border-4 border-white shrink-0 ${
+                  activeProgressStudent.riskLevel === 'High' ? 'bg-rose-500 shadow-rose-200' : 
+                  activeProgressStudent.riskLevel === 'Moderate' ? 'bg-amber-500 shadow-amber-200' : 
+                  'bg-emerald-600 shadow-emerald-200'
+                }`}>
+                  {activeProgressStudent.initials}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-xl font-black text-slate-900 tracking-tight uppercase italic leading-tight truncate">
+                    {activeProgressStudent.name.split(',')[0]}
+                  </h3>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className="text-[8px] font-black bg-emerald-950 text-emerald-400 px-2 py-0.5 rounded-md uppercase tracking-widest">
+                      {activeProgressStudent.grade}
+                    </span>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">ID: SN-{activeProgressStudent.id}</span>
+                  </div>
+                </div>
+                <button onClick={() => setIsProgressModalOpen(false)} className="p-2 rounded-xl hover:bg-emerald-50 text-slate-400 transition-all active:scale-90">
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* TAB NAVIGATION */}
+              <div className="flex p-2 bg-emerald-50/50 gap-2 mx-8 mt-4 rounded-2xl">
+                <button 
+                  onClick={() => setProgressTab('personal')}
+                  className={`flex-1 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${progressTab === 'personal' ? 'bg-white text-emerald-950 shadow-sm' : 'text-emerald-600/40 hover:text-emerald-600'}`}
+                >Personal Data</button>
+                <button 
+                  onClick={() => setProgressTab('analytics')}
+                  className={`flex-1 py-2.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${progressTab === 'analytics' ? 'bg-white text-emerald-950 shadow-sm' : 'text-emerald-600/40 hover:text-emerald-600'}`}
+                >Neural Progress</button>
+              </div>
+
+              {/* SCROLLABLE CONTENT AREA */}
+              <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
+                <AnimatePresence mode="wait">
+                  {progressTab === 'personal' ? (
+                    <motion.div 
+                      key="personal" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }}
+                      className="space-y-6"
+                    >
+                      <div className="space-y-1">
+                        <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest ml-1">Legal Designation</p>
+                        <div className="bg-emerald-50/30 p-4 rounded-2xl border border-emerald-50 font-bold text-xs text-slate-700">
+                          {activeProgressStudent.name}
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest ml-1">Clinical Context</p>
+                          <div className="bg-emerald-50/30 p-4 rounded-2xl border border-emerald-50 font-bold text-[10px] text-slate-600 h-full flex items-center italic">
+                            {activeProgressStudent.condition}
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[8px] font-black text-emerald-600 uppercase tracking-widest ml-1">Guardian Liaison</p>
+                          <div className="bg-emerald-50/30 p-4 rounded-2xl border border-emerald-50 font-bold text-[10px] text-slate-600">
+                            {activeProgressStudent.parentName}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="p-6 bg-slate-900 rounded-[2rem] border border-emerald-900/50 space-y-4">
+                        <div className="flex items-center gap-2 text-emerald-400">
+                          <Target size={14} />
+                          <p className="text-[9px] font-black uppercase tracking-[0.2em]">IEP Summary Nodes</p>
+                        </div>
+                        <div className="grid grid-cols-1 gap-2">
+                          <div className="p-3 bg-white/5 rounded-xl border border-white/10 text-[10px] text-emerald-50/70">
+                            <span className="font-black text-emerald-400 uppercase mr-2 text-[8px]">Motor:</span> {activeProgressStudent.iep.motor}
+                          </div>
+                          <div className="p-3 bg-white/5 rounded-xl border border-white/10 text-[10px] text-emerald-50/70">
+                            <span className="font-black text-emerald-400 uppercase mr-2 text-[8px]">Comms:</span> {activeProgressStudent.iep.communication}
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ) : (
+                    <motion.div 
+                      key="analytics" initial={{ opacity: 0, x: 10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -10 }}
+                      className="space-y-6"
+                    >
+                      {aiAnalysis && (
+                        <div className={`bg-gradient-to-br ${aiAnalysis.color} p-6 rounded-[2rem] text-white relative overflow-hidden shadow-lg`}>
+                          <div className="relative z-10">
+                            <div className="flex items-center gap-2 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest w-fit mb-3 border border-white/10">
+                              {aiAnalysis.icon} {aiAnalysis.tag}
+                            </div>
+                            <h4 className="text-lg font-black italic uppercase tracking-tight mb-1">{aiAnalysis.rec}</h4>
+                            <p className="text-[10px] font-medium text-emerald-50/80 leading-relaxed italic">"{aiAnalysis.exp}"</p>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="bg-white p-6 rounded-[2rem] border border-emerald-50 shadow-sm text-center">
+                        <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-2">Sync Reliability</p>
+                        <p className="text-4xl font-black text-emerald-600 italic tracking-tighter">{activeProgressStudent.reliability}%</p>
+                      </div>
+
+                      <div className="bg-white p-6 rounded-[2rem] border border-emerald-50 shadow-sm">
+                        <h4 className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-4">Competency Radar</h4>
+                        <div className="h-48">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <RadarChart data={activeProgressStudent.competency}>
+                              <PolarGrid stroke="#f1f5f9" />
+                              <PolarAngleAxis dataKey="subject" tick={{fontSize: 7, fontWeight: 800, fill: '#94a3b8'}} />
+                              <Radar name="Current" dataKey="current" stroke="#10b981" fill="#10b981" fillOpacity={0.3} strokeWidth={3} />
+                            </RadarChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
+
+                      <div className="bg-white p-6 rounded-[2rem] border border-emerald-50 shadow-sm">
+                        <h4 className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-4">Neural Focus Pulse</h4>
+                        <div className="h-32">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart data={activeProgressStudent.hourlyFocus}>
+                              <defs>
+                                <linearGradient id="modalPulse" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                                  <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                                </linearGradient>
+                              </defs>
+                              <Area type="monotone" dataKey="level" stroke="#059669" strokeWidth={3} fill="url(#modalPulse)" />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+
+              {/* FOOTER ACTIONS */}
+              <div className="p-8 border-t border-emerald-50 bg-white">
+                <button className="w-full py-4 bg-emerald-950 text-emerald-400 rounded-2xl font-black text-[9px] uppercase tracking-widest hover:bg-black transition-all shadow-xl active:scale-95">
+                  Generate Detailed Progress Report
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* --- QUICK IEP GENERATOR MODAL --- */}
+      <AnimatePresence>
+        {isIEPModalOpen && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-emerald-950/40 backdrop-blur-md overflow-y-auto">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="bg-white rounded-[3rem] shadow-2xl w-full max-w-2xl p-10 relative my-8 border border-emerald-100"
+            >
+              <button onClick={() => setIsIEPModalOpen(false)} className="absolute right-8 top-8 p-2 rounded-xl hover:bg-emerald-50 text-slate-400 transition-all active:scale-90">
+                <X size={24} />
+              </button>
+              <div className="flex items-center gap-4 mb-8">
+                <div className="p-3 bg-emerald-600 rounded-2xl text-white shadow-xl shadow-emerald-600/20">
+                  <Sparkles size={24} />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-slate-800 tracking-tighter uppercase italic">Quick <span className="text-emerald-600">IEP Generator</span></h3>
+                  <p className="text-[10px] font-black text-emerald-800/40 uppercase tracking-[0.2em] mt-1">SAIE Behavioral Analytics Node</p>
+                </div>
+              </div>
+              
+              <div className="space-y-6">
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em] ml-1">Target Learner Node</label>
+                  <div className="relative group">
+                    <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-300 group-focus-within:text-emerald-600 transition-colors" />
+                    <input 
+                      type="text"
+                      placeholder="Search for a learner node..."
+                      value={iepStudentSearch}
+                      onChange={(e) => setIepStudentSearch(e.target.value)}
+                      className="w-full pl-12 pr-12 py-4 bg-emerald-50/50 rounded-2xl border-2 border-transparent focus:border-emerald-500 focus:bg-white outline-none transition-all text-sm font-bold shadow-inner"
+                    />
+                    {iepStudentSearch && (
+                      <button 
+                        type="button"
+                        onClick={() => setIepStudentSearch("")}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-emerald-300 hover:text-emerald-600 transition-colors"
+                      >
+                        <X size={16} />
+                      </button>
+                    )}
+                  </div>
+                  <select className="w-full px-5 py-4 bg-emerald-50/50 rounded-2xl border-2 border-transparent focus:border-emerald-500 focus:bg-white outline-none transition-all text-sm font-bold appearance-none cursor-pointer">
+                    <option value="">{filteredIepStudents.length > 0 ? "Select identified node..." : "No matching nodes found"}</option>
+                    {filteredIepStudents.map((name, i) => <option key={i} value={name}>{name}</option>)}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-emerald-600 uppercase tracking-[0.2em] ml-1">Observational Input</label>
+                  <textarea 
+                    value={obsInput} onChange={(e) => setObsInput(e.target.value)}
+                    className="w-full px-5 py-4 bg-emerald-50/50 rounded-2xl border-2 border-transparent focus:border-emerald-500 focus:bg-white outline-none transition-all text-sm font-medium min-h-[160px] resize-none shadow-inner"
+                    placeholder="Document current behavioral shifts, milestones, or classroom triggers to calibrate the synthesis..."
+                  />
+                </div>
+                <button 
+                  onClick={handleSyncAndGenerate} disabled={isGenerating}
+                  className="w-full py-5 bg-emerald-950 text-emerald-50 rounded-[1.5rem] font-black text-[10px] uppercase tracking-[0.3em] flex items-center justify-center gap-3 hover:bg-black transition-all shadow-2xl active:scale-95 disabled:opacity-50"
+                >
+                  {isGenerating ? <RefreshCcw className="animate-spin" size={18} /> : <BrainCircuit size={18} className="text-emerald-400"/>}
+                  {isGenerating ? 'Synthesizing Neural Data...' : 'Calibrate & Generate IEP'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* --- MESSAGE MODAL --- */}
+      <AnimatePresence>
+        {isMessageModalOpen && activeChatStudent && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-md">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
+              className="bg-white rounded-[3rem] shadow-2xl w-full max-w-lg h-[600px] flex flex-col relative overflow-hidden border border-emerald-100"
+            >
+              <div className="p-6 bg-emerald-50 border-b border-emerald-100 flex justify-between items-center">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-600 text-white font-black flex items-center justify-center shadow-lg">
+                    {activeChatStudent.initials}
+                  </div>
+                  <div>
+                    <p className="font-black text-slate-800 uppercase text-sm tracking-tight">{activeChatStudent.name}</p>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none mt-1">{activeChatStudent.parentName}</p>
+                    <p className="text-[8px] font-black text-emerald-600 uppercase tracking-[0.2em] mt-1.5">Secure Channel Active</p>
+                  </div>
+                </div>
+                <button onClick={() => setIsMessageModalOpen(false)} className="p-2 rounded-xl hover:bg-white text-slate-400 transition-all"><X size={20} /></button>
+              </div>
+
+              <div className="flex-1 overflow-auto p-6 space-y-4 bg-slate-50/30 custom-scrollbar">
+                <div ref={messagesTopRef} />
+                {conversation.length > 0 ? (
+                  conversation.map((msg: any, i: number) => (
+                    <div key={i} className={`flex ${msg.from === user?.name ? 'justify-end' : 'justify-start'}`}>
+                      <div className={`max-w-[80%] p-4 rounded-3xl text-sm font-medium shadow-sm ${msg.from === user?.name ? 'bg-emerald-600 text-white rounded-tr-none' : 'bg-white border border-emerald-50 text-slate-700 rounded-tl-none'}`}>
+                        {msg.content}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                   <div className="h-full flex flex-col items-center justify-center text-center p-8 space-y-4">
+                     <div className="p-4 bg-emerald-50 rounded-full text-emerald-300"><MessageSquare size={32} /></div>
+                     <p className="text-xs font-bold text-slate-400 uppercase tracking-widest leading-relaxed">Encrypted Link Established.<br />Initiate secure communication.</p>
+                   </div>
+                )}
+                {isParentTyping && (
+                  <div className="flex justify-start">
+                    <div className="bg-white border border-emerald-50 p-3 px-4 rounded-2xl rounded-tl-none flex gap-1">
+                      <span className="w-1.5 h-1.5 bg-emerald-300 rounded-full animate-bounce" />
+                      <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce [animation-delay:0.2s]" />
+                      <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-bounce [animation-delay:0.4s]" />
+                    </div>
+                  </div>
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+
+              <form onSubmit={handleSendMessage} className="p-6 bg-white border-t border-emerald-50 flex gap-3">
+                <input 
+                  value={chatInput} onChange={(e) => setChatInput(e.target.value)}
+                  placeholder="Transmit secure message..."
+                  className="flex-1 bg-emerald-50/50 border-none rounded-2xl px-5 py-4 text-sm font-bold text-slate-700 focus:ring-2 ring-emerald-500/10 outline-none"
+                />
+                <button type="submit" className="p-4 bg-emerald-950 text-white rounded-2xl hover:bg-black transition-all shadow-xl active:scale-95"><Send size={20} /></button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* --- QUICK UPDATE REVIEW MODAL --- */}
+      <AnimatePresence>
+        {isReviewModalOpen && pendingQuickUpdate && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-emerald-950/40 backdrop-blur-md">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }}
+              className="bg-white rounded-[2.5rem] shadow-2xl w-full max-w-md p-8 relative border border-emerald-100"
+            >
+              <div className="flex items-center gap-4 mb-6">
+                <div className={`p-3 rounded-2xl text-white ${pendingQuickUpdate.student.riskLevel === 'High' ? 'bg-rose-500' : pendingQuickUpdate.student.riskLevel === 'Moderate' ? 'bg-amber-500' : 'bg-emerald-500'}`}>
+                  <Send size={20} />
+                </div>
+                <div>
+                  <h3 className="text-xl font-black text-slate-800 uppercase tracking-tighter italic">Review <span className="text-emerald-600">Update</span></h3>
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">To: {pendingQuickUpdate.student.parentName}</p>
+                </div>
+              </div>
+
+              <div className="bg-emerald-50/50 p-6 rounded-3xl border border-emerald-100 mb-8 italic text-sm font-medium text-slate-700 leading-relaxed shadow-inner">
+                "{pendingQuickUpdate.message}"
+              </div>
+
+              <div className="flex gap-3">
+                <button 
+                  onClick={() => setIsReviewModalOpen(false)}
+                  className="flex-1 py-4 rounded-2xl border-2 border-emerald-100 text-emerald-700 font-black text-[10px] uppercase tracking-widest hover:bg-emerald-50 transition-all"
+                >Cancel</button>
+                <button 
+                  onClick={confirmQuickUpdate}
+                  className="flex-1 py-4 bg-emerald-950 text-white rounded-2xl font-black text-[10px] uppercase tracking-widest hover:bg-black transition-all shadow-xl active:scale-95"
+                >Send Update</button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* --- TEACHER PROFILE MODAL --- */}
+      <TeacherProfile isOpen={isTeacherProfileModalOpen} onClose={() => setIsTeacherProfileModalOpen(false)} />
+
+      <style dangerouslySetInnerHTML={{ __html: `
+          @media (max-width: 640px) {
+            h1 { font-size: 3rem !important; }
+            .rounded-[3rem] { border-radius: 2rem !important; }
+            .rounded-[2.5rem] { border-radius: 1.5rem !important; }
+            header { border-radius: 1.5rem !important; margin-bottom: 2rem; }
+          }
+      `}} />
+    </div>
+  );
+};
+
+export default TeacherHome;
+
+
+
+
+
+
+
+
+
+
+import React, { useMemo } from 'react';
+import { useApp } from '@/context/AppContext';
+import {
+  Brain, Activity, AlertTriangle, TrendingUp, User, Info, 
+  Send, LogOut, Menu, ShieldCheck, Zap, CheckCircle2, 
+  Users, MessageSquare, FileText, Lock, Heart, ShieldAlert, Cpu, Clock
+} from 'lucide-react';
+import { BarChart, Bar, XAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { calculateStudentRiskPrediction, calculateStrategyEfficacy } from '@/lib/aiUtils';
+import { toast } from "sonner";
+import { Link } from 'react-router-dom';
+
+// Professional Emerald Color Palette Mapping
+const EMERALD = {
+  primary: '#10b981', // Emerald 500
+  dark: '#065f46',    // Emerald 800
+  deep: '#064e3b',    // Emerald 900
+  light: '#d1fae5',   // Emerald 100
+  accent: '#34d399',  // Emerald 400
+};
+
+const weeklyData = [
+  { day: 'Mon', value: 12 }, { day: 'Tue', value: 15 }, { day: 'Wed', value: 10 },
+  { day: 'Thu', value: 14 }, { day: 'Fri', value: 13 },
+];
+
+const riskDistribution = [
+  { name: 'Low Risk', value: 65, color: '#10b981' }, // Emerald 500
+  { name: 'Moderate Risk', value: 25, color: '#f59e0b' }, // Amber 500 for warning
+  { name: 'High Risk', value: 10, color: '#ef4444' }, // Red 500 for alert
+];
+
+const AdminDashboard = () => {
+  const { 
+    user, setUser, students, behaviorLogs, 
+    alerts, users, isLoading, sendMessage, 
+    messages, progressNotes 
+  } = useApp();
+
+  const pendingIepRequests = [
+    { id: '1', parent: 'Sarah Jenkins', student: 'Leo J.', time: '2h ago' },
+    { id: '2', parent: 'Michael Chen', student: 'Mia C.', time: '5h ago' },
+  ];
+
+  const activeStudents = students.filter(s => s.status === 'active');
+  const teachers = users.filter(u => u.role === 'teacher');
+  const parents = users.filter(u => u.role === 'parent');
+  const highRiskAlerts = alerts.filter(a => a.priority === 'High').length;
+
+  const studentRiskPredictions = useMemo(() => {
+    return students
+      .filter(s => s.status === 'active')
+      .map(student => calculateStudentRiskPrediction(student, behaviorLogs))
+      .sort((a, b) => b.probability - a.probability)
+      .slice(0, 4);
+  }, [students, behaviorLogs]);
+
+  const handleNotifyTeacher = (studentId: string, studentName: string, teacherName: string, intervention: string) => {
+    sendMessage({
+      from: user?.name || 'Admin',
+      to: teacherName,
+      content: `AI Strategy Suggestion for ${studentName}:\n\n"${intervention}"`,
+      timestamp: new Date().toLocaleString(),
+      read: false,
+    });
+    toast.success(`Strategy sent to ${teacherName}`, {
+        style: { background: '#064e3b', color: '#fff' }
+    });
+  };
+
+  if (isLoading) {
+    return (
+      <div className="p-6 max-w-5xl mx-auto space-y-6 animate-pulse">
+        <div className="h-20 bg-emerald-100/50 rounded-[2rem]" />
+        <div className="grid grid-cols-4 gap-4">
+          {[1, 2, 3, 4].map(i => <div key={i} className="h-32 bg-emerald-50 rounded-2xl" />)}
+        </div>
+        <div className="h-96 bg-emerald-50 rounded-[2.5rem]" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-4 md:p-8 max-w-5xl mx-auto space-y-6 animate-fade-in relative min-h-screen">
+      {/* Dynamic Professional Emerald Background */}
+      <div className="fixed inset-0 -z-10" style={{
+        background: '#f8fafc',
+        backgroundImage: `
+          radial-gradient(at 0% 0%, #d1fae5 0, transparent 40%), 
+          radial-gradient(at 50% 0%, #ecfdf5 0, transparent 50%), 
+          radial-gradient(at 100% 0%, #f0fdf4 0, transparent 40%)
+        `
+      }} />
+
+      {/* Header Area */}
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white/60 backdrop-blur-xl p-8 rounded-[2.5rem] border border-emerald-100 shadow-sm shadow-emerald-900/5">
+        <div className="flex items-center gap-4">
+          <div className="p-3 bg-emerald-900 rounded-2xl shadow-xl shadow-emerald-900/20">
+            <Cpu className="text-emerald-400 w-6 h-6" />
+          </div>
+          <div>
+            <h2 className="text-3xl font-black text-slate-900 tracking-tighter uppercase italic">Root <span className="text-emerald-600">Node Command</span></h2>
+            <p className="text-[10px] font-black text-emerald-800/60 uppercase tracking-[0.3em]">Institutional Node Oversight</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-4 no-print">
+          <div className="hidden md:flex flex-col items-end mr-2">
+            <p className="text-[10px] font-bold text-slate-500 uppercase">System Time</p>
+            <p className="text-xs font-black text-emerald-900">{new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+          </div>
+          <button onClick={() => setUser(null)} className="p-3 rounded-2xl bg-white border border-emerald-100 shadow-sm text-slate-400 hover:text-emerald-600 hover:border-emerald-200 transition-all active:scale-95">
+            <LogOut className="w-5 h-5" />
+          </button>
+        </div>
+      </header>
+
+      {/* Top Level System Health Nodes */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {[
+            { label: 'System Status', value: 'Active', icon: Activity, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+            { label: 'Network Nodes', value: users.length, icon: Cpu, color: 'text-emerald-500', bg: 'bg-emerald-50' },
+            { label: 'Inference Acc.', value: '94.2%', icon: Brain, color: 'text-emerald-700', bg: 'bg-emerald-50' },
+            { label: 'Neural Logs', value: behaviorLogs.length, icon: Zap, color: 'text-amber-500', bg: 'bg-amber-50' }
+        ].map((stat, i) => (
+            <div key={i} className="bg-white/80 border border-emerald-50 p-6 rounded-[2rem] shadow-sm hover:shadow-emerald-900/5 transition-all group">
+               <div className="flex justify-between items-start mb-4">
+                  <stat.icon className={`${stat.color} group-hover:scale-110 transition-transform`} size={22} />
+                  <div className={`w-2 h-2 rounded-full ${stat.label === 'System Status' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-200'}`} />
+               </div>
+               <p className="text-2xl font-black text-slate-900">{stat.value}</p>
+               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{stat.label}</p>
+            </div>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        {/* Faculty Insight Block */}
+        <div className="lg:col-span-8 space-y-6">
+          <div className="p-8 bg-emerald-600 text-white relative overflow-hidden rounded-[2.5rem] shadow-xl shadow-emerald-900/10">
+            <Brain size={180} className="absolute -bottom-12 -right-12 opacity-10" />
+            <div className="relative z-10 flex flex-col md:flex-row justify-between gap-8">
+              <div className="space-y-6">
+                 <div className="flex items-center gap-2 text-emerald-100">
+                    <Users size={18} />
+                    <span className="text-[10px] font-black uppercase tracking-[0.2em]">Faculty Activity Monitor</span>
+                 </div>
+                 <h3 className="text-4xl font-black italic tracking-tighter uppercase leading-none">
+                    {teachers.length} Expert <br /> Instructors
+                 </h3>
+                 <div className="flex gap-6">
+                    <div className="space-y-1">
+                       <p className="text-2xl font-black leading-none">{activeStudents.length}</p>
+                       <p className="text-[8px] font-bold uppercase tracking-widest opacity-70">Learners</p>
+                    </div>
+                    <div className="w-[1px] bg-white/20" />
+                    <div className="space-y-1">
+                       <p className="text-2xl font-black leading-none text-red-200">{highRiskAlerts}</p>
+                       <p className="text-[8px] font-bold uppercase tracking-widest opacity-70">Alerts</p>
+                    </div>
+                 </div>
+              </div>
+              <div className="flex flex-col justify-center gap-3">
+                 <Link 
+                    to="/admin/users"
+                    className="px-8 py-4 bg-white text-emerald-900 rounded-2xl font-black text-[10px] text-center uppercase tracking-widest shadow-lg hover:bg-emerald-50 transition-colors"
+                 >
+                    Faculty Directory
+                 </Link>
+                 <Link 
+                    to="/admin/analytics"
+                    className="px-8 py-4 bg-emerald-800/50 text-white border border-emerald-400/30 backdrop-blur-md rounded-2xl font-black text-[10px] text-center uppercase tracking-widest hover:bg-emerald-800 transition-colors"
+                 >
+                    Intervention Audit
+                 </Link>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Pie Chart Card */}
+            <div className="bg-white p-8 rounded-[2.5rem] border border-emerald-50 shadow-sm">
+              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6">Behavior Distribution</h3>
+              <div className="h-44">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie data={riskDistribution} dataKey="value" cx="50%" cy="50%" innerRadius={50} outerRadius={70} paddingAngle={8}>
+                      {riskDistribution.map((entry, i) => <Cell key={i} fill={entry.color} stroke="none" />)}
+                    </Pie>
+                    <Tooltip 
+                        contentStyle={{ borderRadius: '20px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)', fontSize: '12px', fontWeight: 'bold' }} 
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="flex justify-center gap-4 mt-4">
+                {riskDistribution.map(r => (
+                  <div key={r.name} className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: r.color }} />
+                    <span className="text-[8px] font-black text-slate-500 uppercase tracking-tighter">{r.name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Bar Chart Card */}
+            <div className="bg-white p-8 rounded-[2.5rem] border border-emerald-50 shadow-sm">
+              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-6">Weekly Activity Flux</h3>
+              <div className="h-44">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={weeklyData}>
+                    <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fontSize: 10, fontWeight: 800, fill: '#94a3b8' }} />
+                    <Bar dataKey="value" fill="#059669" radius={[6, 6, 6, 6]} barSize={20} />
+                    <Tooltip cursor={{fill: '#f0fdf4'}} contentStyle={{ borderRadius: '15px', border: 'none', fontWeight: 'bold' }} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Parent Engagement Section */}
+        <div className="lg:col-span-4">
+          <div className="bg-emerald-950 p-8 text-white rounded-[2.5rem] shadow-2xl shadow-emerald-950/20 flex flex-col h-full border border-emerald-800">
+             <div className="flex justify-between items-start mb-10">
+                <div className="flex items-center gap-3 text-emerald-400">
+                   <Heart size={24} className="fill-emerald-400" />
+                   <h3 className="text-[10px] font-black uppercase tracking-[0.3em]">Guardian Link</h3>
+                </div>
+                <ShieldCheck className="text-emerald-500" size={24} />
+             </div>
+
+             <div className="mb-8">
+                <p className="text-5xl font-black italic uppercase tracking-tighter text-emerald-50">{parents.length}</p>
+                <p className="text-[10px] font-bold text-emerald-400/60 uppercase tracking-widest mt-1">Authorized Guardians</p>
+             </div>
+
+             <div className="space-y-4 flex-grow">
+                <div className="p-4 bg-emerald-900/40 rounded-2xl border border-emerald-800">
+                   <div className="flex justify-between items-center mb-2">
+                      <span className="text-[9px] font-bold uppercase text-emerald-300">IEP Sync Health</span>
+                      <span className="text-[9px] font-black text-emerald-400">92%</span>
+                   </div>
+                   <div className="h-1.5 w-full bg-emerald-900 rounded-full overflow-hidden">
+                      <div className="h-full bg-emerald-500 w-[92%]" />
+                   </div>
+                </div>
+
+                <div className="space-y-2">
+                   <p className="text-[9px] font-black uppercase text-emerald-500 tracking-[0.2em] flex items-center gap-2">
+                     <Lock size={12} /> Pending Access
+                   </p>
+                   {pendingIepRequests.map((req) => (
+                    <div key={req.id} className="p-3 bg-emerald-900/20 rounded-xl border border-emerald-800/50 hover:bg-emerald-800 transition-colors cursor-pointer group">
+                      <div className="flex justify-between items-center">
+                        <p className="text-[10px] font-bold text-emerald-100 group-hover:text-white transition-colors">{req.parent}</p>
+                        <span className="text-[8px] font-bold text-emerald-600">{req.time}</span>
+                      </div>
+                      <p className="text-[9px] text-emerald-500 italic mt-0.5">Ref: {req.student}</p>
+                    </div>
+                  ))}
+                </div>
+             </div>
+
+             <Link 
+                to="/admin/users"
+                className="w-full mt-10 py-5 bg-emerald-500 hover:bg-emerald-400 text-emerald-950 rounded-[1.5rem] font-black text-[10px] text-center uppercase tracking-widest transition-all shadow-xl shadow-emerald-500/10 active:scale-95"
+             >
+                Manage Access
+             </Link>
+          </div>
+        </div>
+
+        {/* AI Predictive Analytics */}
+        <div className="lg:col-span-12">
+          <div className="bg-white p-8 rounded-[3rem] border border-emerald-50 shadow-sm overflow-hidden relative">
+            <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-4">
+              <div className="flex items-center gap-4">
+                 <div className="p-3 bg-rose-50 rounded-2xl text-rose-600">
+                    <Activity size={28} />
+                 </div>
+                 <div>
+                   <h3 className="text-xl font-black text-slate-800 uppercase tracking-tighter">Risk Escalation Nodes</h3>
+                   <p className="text-[9px] font-bold text-rose-600 uppercase tracking-[0.2em]">Active Alerts Requiring Root Intervention</p>
+                 </div>
+              </div>
+              <div className="px-4 py-2 bg-emerald-50 border border-emerald-100 rounded-full">
+                <p className="text-[10px] font-black text-emerald-700 uppercase">Analysis for {activeStudents.length} Active Profiles</p>
+              </div>
+            </div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {studentRiskPredictions.map((s, idx) => (
+                <div key={s.id} className="p-6 bg-white border border-emerald-50 rounded-[2rem] hover:shadow-2xl hover:shadow-emerald-900/5 hover:-translate-y-1 transition-all duration-300 group">
+                  <div className="flex justify-between items-start mb-6">
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center font-black text-emerald-700 shadow-sm group-hover:bg-emerald-600 group-hover:text-white transition-all">
+                      {s.initials}
+                    </div>
+                    <span className={`text-[10px] font-black uppercase px-2 py-1 rounded-lg ${s.probability > 75 ? 'bg-red-50 text-red-600' : s.probability > 50 ? 'bg-amber-50 text-amber-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                      {s.probability}% Risk
+                    </span>
+                  </div>
+                  <p className="text-sm font-black text-slate-800 uppercase truncate mb-1">{s.name}</p>
+                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-6">Instructed by {s.teacher}</p>
+                  
+                  <button 
+                    onClick={() => handleNotifyTeacher(s.id, s.name, s.teacher, s.intervention)}
+                    className="w-full py-3 bg-emerald-950 text-white rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-black transition-all active:scale-95"
+                  >
+                    Deploy Strategy
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+};
+
+export default AdminDashboard;
