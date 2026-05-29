@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+﻿import React, { useState, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useApp } from "@/context/AppContext";
 import TeacherMobile from "./TeacherMobile";
@@ -397,8 +397,8 @@ const StepBar:React.FC<{current:number}>=({current})=>(
 // ── Dashboard ──────────────────────────────────────────────────────────────
 const Dashboard:React.FC<{onStart:()=>void}>=({onStart})=>{
   const {user,students=[],iepRequests=[],updateIEPRequest}=useApp();
-  const allWhitelistedStudents = useMemo(() => 
-    students.filter((s: any) => s.status !== 'archived' && s.teacher === user?.name), 
+  const allWhitelistedStudents = useMemo(() =>
+    students.filter((s: any) => s.status !== 'archived' && s.teacher === user?.name),
     [students, user?.name]
   );
 
@@ -917,10 +917,6 @@ const AIAnalysis:React.FC<{student:Student;logData:LogState|null;onNext:(r:MLRes
             <Card style={{borderLeft:`3px solid ${riskInfo!.color}`}}>
               <div style={{fontSize:10,fontWeight:800,color:riskInfo!.color,textTransform:"uppercase",letterSpacing:1,marginBottom:10,fontFamily:TNR,display:"flex",alignItems:"center",gap:6}}>
                 <Icon name="target" size={13} color={riskInfo!.color}/> Personalized Recommendation
-
-
-
-
               </div>
               <p style={{fontSize:13,color:M.g800,margin:0,lineHeight:1.8,fontFamily:TNR,fontWeight:700}}>{mlResult.recommendation}</p>
             </Card>
@@ -964,9 +960,6 @@ const RiskClassification:React.FC<{student:Student;mlResult:MLResult|null;onNext
           <Card>
             <div style={{fontSize:12,fontWeight:800,color:M.g800,marginBottom:12,fontFamily:TNR,display:"flex",alignItems:"center",gap:7}}>
               <Icon name="target" size={15} color={M.maroon}/> {mlResult?"AI Recommendations":"Default Recommendations"}
-
-
-
             </div>
             {recBullets.map((r,i)=>(
               <div key={i} style={{display:"flex",gap:9,marginBottom:9,fontSize:12.5,fontFamily:TNR}}>
@@ -974,12 +967,6 @@ const RiskClassification:React.FC<{student:Student;mlResult:MLResult|null;onNext
                   <Icon name="check" size={10} color={M.maroon}/>
                 </div>
                 <span style={{color:M.g800,fontWeight:700,lineHeight:1.5}}>{r}</span>
-
-
-
-
-
-
               </div>
             ))}
           </Card>
