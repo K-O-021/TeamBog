@@ -15,15 +15,18 @@ import pickle
 import json
 import numpy as np
 
-# This is where the supervised learning ML model getting the path
-ML_MODEL_DIR = os.path.dirname(__file__)
-sys.path.insert(0, ML_MODEL_DIR)
+# Use abspath so the path is correct regardless of where uvicorn is launched from
+ML_MODEL_DIR = os.path.dirname(os.path.abspath(__file__))
+if ML_MODEL_DIR not in sys.path:
+    sys.path.insert(0, ML_MODEL_DIR)
 
 try:
     from recommend import build_recommendation as _build_recommendation
     _RECOMMEND_AVAILABLE = True
-except ImportError:
+    print(f"✅ recommend.py loaded from {ML_MODEL_DIR}")
+except Exception as _rec_err:
     _RECOMMEND_AVAILABLE = False
+    print(f"⚠  recommend.py failed to load: {_rec_err}")
 
 # MultiLabelEncoder must be defined here so pickle can deserialize stored encoders
 class MultiLabelEncoder:
