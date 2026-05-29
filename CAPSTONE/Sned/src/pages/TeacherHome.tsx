@@ -746,22 +746,109 @@ const SaveConfirmation:React.FC<{student:Student;onProceed:()=>void}>=({student,
   </div>
 );
 
+// This is where the ML Integration happens
+interface MLResult {
+  category: string;
+  confidence: number;
+  recommendation: string;
+  top3: { category: string; confidence: number }[];
+}
+
+const MODEL_POS_SET = new Set(["Self-Regulation","Social Engagement","Functional Communication","Sustained Attention","Emotional Regulation","Task Completion","Learning Progress","Organized Work Habits"]);
+const MODEL_NEG_SET = new Set(["Sensory Overload","Self-Harm","Social Difficulty","Inattention","Hyperactivity","Emotional Outbursts","Aggression","Communication Difficulty"]);
+
+async function fetchMLRecommendation(logData: LogState, student: Student): Promise<MLResult | null> {
+  const activeInterventions = Object.entries(logData.interventions).filter(([,v])=>v).map(([k])=>k);
+  const posInds = MODEL_POS_SET.has(logData.category) ? [logData.category] : [];
+  const negInds = MODEL_NEG_SET.has(logData.category) ? [logData.category] : [];
+  try {
+    const res = await fetch("http://127.0.0.1:8000/api/ml-recommend", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        student_name: student.name,
+        subject: "Mathematics",
+        observation_text: logData.obs,
+        mood: logData.mood,
+        participation_level: logData.participation,
+        incident_report: logData.incident,
+        interventions_applied: activeInterventions,
+        positive_indicators: posInds,
+        negative_indicators: negInds,
+        teacher_remarks: logData.remarks,
+      }),
+    });
+    if (!res.ok) return null;
+    return await res.json() as MLResult;
+  } catch { return null; }
+}
+
+const CATEGORY_LABELS: Record<string,string> = {
+  ANXIETY_SUPPORT:               "Anxiety Support",
+  BEHAVIORAL_ANXIOUS:            "Behavioral (Anxious)",
+  BEHAVIORAL_FATIGUED:           "Behavioral (Fatigued)",
+  BEHAVIORAL_FRUSTRATED:         "Behavioral (Frustrated)",
+  BEHAVIORAL_SAD:                "Behavioral (Sad)",
+  EMOTIONAL_SUPPORT_SAD:         "Emotional Support",
+  ENTHUSIASM_MANAGEMENT:         "Enthusiasm Management",
+  EXCELLENT_PERFORMANCE:         "Excellent Performance",
+  FATIGUE_SUPPORT:               "Fatigue Support",
+  FRUSTRATION_HIGH_PARTICIPATION:"Frustration – High Participation",
+  FRUSTRATION_LOW_PARTICIPATION: "Frustration – Low Participation",
+  GENERAL_MIXED:                 "General Mixed Profile",
+  PHYSICAL_AGGRESSION:           "Physical Aggression",
+  URGENT_SELF_HARM:              "Urgent: Self-Harm",
+};
+
+const CATEGORY_RISK: Record<string,{level:string;color:string}> = {
+  URGENT_SELF_HARM:               {level:"CRITICAL RISK", color:M.red},
+  PHYSICAL_AGGRESSION:            {level:"CRITICAL RISK", color:M.red},
+  BEHAVIORAL_FRUSTRATED:          {level:"HIGH RISK",     color:M.red},
+  BEHAVIORAL_ANXIOUS:             {level:"HIGH RISK",     color:M.red},
+  BEHAVIORAL_SAD:                 {level:"HIGH RISK",     color:M.red},
+  BEHAVIORAL_FATIGUED:            {level:"MODERATE RISK", color:M.amber},
+  FRUSTRATION_LOW_PARTICIPATION:  {level:"MODERATE RISK", color:M.amber},
+  ANXIETY_SUPPORT:                {level:"MODERATE RISK", color:M.amber},
+  FRUSTRATION_HIGH_PARTICIPATION: {level:"MODERATE RISK", color:M.amber},
+  FATIGUE_SUPPORT:                {level:"MODERATE RISK", color:M.amber},
+  EMOTIONAL_SUPPORT_SAD:          {level:"MODERATE RISK", color:M.amber},
+  ENTHUSIASM_MANAGEMENT:          {level:"LOW RISK",      color:M.green},
+  GENERAL_MIXED:                  {level:"LOW RISK",      color:M.green},
+  EXCELLENT_PERFORMANCE:          {level:"LOW RISK",      color:M.green},
+};
+
 // ── AI Analysis ────────────────────────────────────────────────────────────
-const AIAnalysis:React.FC<{student:Student;onNext:()=>void}>=({student,onNext})=>{
-  const [done,setDone]=useState(false);
+const AIAnalysis:React.FC<{student:Student;logData:LogState|null;onNext:(r:MLResult|null)=>void}>=({student,logData,onNext})=>{
+
   const [progress,setProgress]=useState(0);
+  const [mlResult,setMlResult]=useState<MLResult|null>(null);
+  const [apiDone,setApiDone]=useState(false);
+  const done=progress>=95&&apiDone;
+
   useEffect(()=>{
-    const iv=setInterval(()=>setProgress(p=>{if(p>=100){clearInterval(iv);setDone(true);return 100;}return p+3;}),70);
+    const iv=setInterval(()=>setProgress(p=>p>=95?95:p+3),70);
+    (async()=>{
+      if(logData){const r=await fetchMLRecommendation(logData,student);setMlResult(r);}
+      setApiDone(true);
+    })();
     return()=>clearInterval(iv);
   },[]);
+
+  useEffect(()=>{if(apiDone&&progress>=95)setProgress(100);},[apiDone]);
+
+  const riskInfo=mlResult?(CATEGORY_RISK[mlResult.category]||{level:"MODERATE RISK",color:M.amber}):null;
+  const catLabel=mlResult?(CATEGORY_LABELS[mlResult.category]||mlResult.category):"—";
+
   return(
     <div style={{padding:"24px 28px",maxWidth:700,margin:"0 auto"}}>
-      <STitle step={4} total={8} title="AI Behavioral Analysis" sub="Analyzing patterns across subjects and sessions."/>
+      <STitle step={4} total={8} title="AI Behavioral Analysis" sub="Running SVM model on session inputs for behavioral classification."/>
       {!done?(
         <Card style={{textAlign:"center",padding:"48px 28px"}}>
           <div style={{width:72,height:72,borderRadius:"50%",background:`rgba(123,28,42,0.08)`,display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 18px"}}><Icon name="brain" size={34} color={M.maroon}/></div>
-          <div style={{fontWeight:900,fontSize:15,color:M.g800,marginBottom:7,fontFamily:TNR}}>Analyzing Behavioral Patterns…</div>
-          <p style={{color:M.g700,fontSize:12.5,marginBottom:24,fontFamily:TNR,fontWeight:600}}>Cross-referencing 18 activity logs across Mathematics, English, and Science.</p>
+          <div style={{fontWeight:900,fontSize:15,color:M.g800,marginBottom:7,fontFamily:TNR}}>Running Behavioral Analysis…</div>
+          <p style={{color:M.g700,fontSize:12.5,marginBottom:24,fontFamily:TNR,fontWeight:600}}>
+            {apiDone?"Processing complete. Finalizing results…":"Classifying observation, mood, incident, and intervention data."}
+          </p>
           <div style={{maxWidth:340,margin:"0 auto"}}>
             <PBar val={progress} color={M.maroon} h={8}/>
             <div style={{fontSize:11.5,color:M.g700,marginTop:8,fontFamily:TNR,fontWeight:700}}>{progress}% complete</div>
@@ -770,39 +857,75 @@ const AIAnalysis:React.FC<{student:Student;onNext:()=>void}>=({student,onNext})=
       ):(
         <div style={{display:"flex",flexDirection:"column",gap:14}}>
           <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14}}>
+            {/* Session Input Summary */}
             <Card>
-              <div style={{fontSize:10,fontWeight:800,color:M.g800,textTransform:"uppercase",letterSpacing:1,marginBottom:14,fontFamily:TNR}}>Input Summary</div>
-              {[["Student",student.name],["Logs Analyzed","18"],["Subjects","Math · English · Science"],["Date Range","Apr 1 – May 24"]].map(([k,v])=>(
-                <div key={k} style={{marginBottom:10}}>
+              <div style={{fontSize:10,fontWeight:800,color:M.g800,textTransform:"uppercase",letterSpacing:1,marginBottom:14,fontFamily:TNR}}>Session Input</div>
+              {([["Student",student.name],["Mood",logData?.mood||"—"],["Participation",`${logData?.participation||0}/5`],["Incident",logData?.incident||"—"],["Category",logData?.category||"—"]] as [string,string][]).map(([k,v])=>(
+                <div key={k} style={{marginBottom:9}}>
                   <div style={{fontSize:9.5,color:M.g700,fontWeight:800,textTransform:"uppercase",fontFamily:TNR,letterSpacing:0.5}}>{k}</div>
-                  <div style={{fontSize:12.5,fontWeight:800,color:M.g800,fontFamily:TNR}}>{v}</div>
+                  <div style={{fontSize:12.5,fontWeight:800,color:M.g800,fontFamily:TNR,wordBreak:"break-word"}}>{v}</div>
                 </div>
               ))}
             </Card>
-            <Card style={{borderLeft:`3px solid ${M.maroon}`}}>
-              <div style={{fontSize:10,fontWeight:800,color:M.maroon,textTransform:"uppercase",letterSpacing:1,marginBottom:10,fontFamily:TNR,display:"flex",alignItems:"center",gap:6}}><Icon name="sparkle" size={13} color={M.maroon}/> AI Result</div>
-              <ul style={{margin:"0 0 14px",padding:"0 0 0 16px",fontSize:12.5,color:M.g800,lineHeight:2.1,fontFamily:TNR,fontWeight:700}}>
-                <li>Repeated inattentiveness in Math.</li><li>Consistent participation in English.</li><li>Signs of hyperactivity in Science.</li>
-              </ul>
-              <div style={{background:"rgba(123,28,42,0.05)",borderRadius:10,padding:"10px 13px",border:`1px solid ${M.maroon}18`}}>
-                <div style={{fontSize:10.5,fontWeight:800,color:M.maroon,marginBottom:5,fontFamily:TNR,display:"flex",alignItems:"center",gap:5}}><Icon name="eye" size={12} color={M.maroon}/> AI Insight</div>
-                <p style={{fontSize:12,color:M.g800,margin:0,lineHeight:1.7,fontFamily:TNR,fontWeight:700}}>Inconsistent attention across subjects. Structured interventions in Math recommended.</p>
+            {/* ML Prediction Result */}
+            <Card style={{borderLeft:`3px solid ${mlResult?riskInfo!.color:M.maroon}`}}>
+              <div style={{fontSize:10,fontWeight:800,color:mlResult?riskInfo!.color:M.maroon,textTransform:"uppercase",letterSpacing:1,marginBottom:10,fontFamily:TNR,display:"flex",alignItems:"center",gap:6}}>
+                <Icon name="sparkle" size={13} color={mlResult?riskInfo!.color:M.maroon}/> ML Prediction
+
+
+
+
               </div>
+              {mlResult?(
+                <>
+                  <div style={{marginBottom:10}}>
+                    <div style={{fontSize:9.5,color:M.g700,fontWeight:800,textTransform:"uppercase",fontFamily:TNR,letterSpacing:0.5,marginBottom:4}}>Predicted Category</div>
+                    <div style={{fontSize:13.5,fontWeight:900,color:riskInfo!.color,fontFamily:TNR,fontStyle:"italic",marginBottom:5}}>{catLabel}</div>
+                    <div style={{display:"flex",alignItems:"center",gap:8,flexWrap:"wrap"}}>
+                      <Tag color={riskInfo!.color}>{riskInfo!.level}</Tag>
+                      <span style={{fontSize:11,color:M.g700,fontFamily:TNR,fontWeight:700}}>Confidence: {mlResult.confidence.toFixed(1)}%</span>
+                    </div>
+                  </div>
+                  {mlResult.top3.length>0&&(
+                    <div style={{background:"rgba(0,0,0,0.03)",borderRadius:9,padding:"9px 11px",border:"1px solid rgba(0,0,0,0.06)"}}>
+                      <div style={{fontSize:9.5,fontWeight:800,color:M.g800,textTransform:"uppercase",letterSpacing:0.5,marginBottom:7,fontFamily:TNR}}>Top Predictions</div>
+                      {mlResult.top3.map(t=>{
+                        const ti=CATEGORY_RISK[t.category];
+                        return(
+                          <div key={t.category} style={{marginBottom:6}}>
+                            <div style={{display:"flex",justifyContent:"space-between",fontSize:10.5,marginBottom:3,fontFamily:TNR}}>
+                              <span style={{color:M.g800,fontWeight:700}}>{CATEGORY_LABELS[t.category]||t.category}</span>
+                              <span style={{fontWeight:900,color:ti?.color||M.g600}}>{t.confidence.toFixed(1)}%</span>
+                            </div>
+                            <PBar val={t.confidence} color={ti?.color||M.g600} h={4}/>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </>
+              ):(
+                <div style={{padding:"14px 0",fontSize:12.5,color:M.amber,fontFamily:TNR,fontWeight:700,display:"flex",flexDirection:"column",gap:6}}>
+                  <div style={{display:"flex",alignItems:"center",gap:7}}><Icon name="alert" size={14} color={M.amber}/> API Unreachable</div>
+                  <div style={{fontSize:11,color:M.g700,fontWeight:600,lineHeight:1.6}}>Ensure the FastAPI backend is running on <strong>localhost:8000</strong>.</div>
+                </div>
+              )}
             </Card>
           </div>
-          <Card>
-            <div style={{fontSize:12.5,fontWeight:800,color:M.g800,marginBottom:14,fontFamily:TNR,display:"flex",alignItems:"center",gap:7}}><Icon name="chart" size={15} color={M.maroon}/> Subject-wise Behavioral Score</div>
-            {[{label:"Mathematics — Inattentiveness",val:78,color:M.red},{label:"English — Participation",val:82,color:M.maroon},{label:"Science — Hyperactivity",val:54,color:M.amber},{label:"Overall Concern",val:65,color:M.sky}].map(b=>(
-              <div key={b.label} style={{marginBottom:12}}>
-                <div style={{display:"flex",justifyContent:"space-between",fontSize:11.5,marginBottom:5,fontFamily:TNR}}>
-                  <span style={{color:M.g700,fontWeight:700}}>{b.label}</span>
-                  <span style={{fontWeight:900,color:b.color}}>{b.val}%</span>
-                </div>
-                <PBar val={b.val} color={b.color} h={6}/>
+          {/* Personalized Recommendation */}
+          {mlResult&&(
+            <Card style={{borderLeft:`3px solid ${riskInfo!.color}`}}>
+              <div style={{fontSize:10,fontWeight:800,color:riskInfo!.color,textTransform:"uppercase",letterSpacing:1,marginBottom:10,fontFamily:TNR,display:"flex",alignItems:"center",gap:6}}>
+                <Icon name="target" size={13} color={riskInfo!.color}/> Personalized Recommendation
+
+
+
+
               </div>
-            ))}
-          </Card>
-          <Btn onClick={onNext}>Next: Risk Classification <Icon name="arrow" size={14} color={M.white}/></Btn>
+              <p style={{fontSize:13,color:M.g800,margin:0,lineHeight:1.8,fontFamily:TNR,fontWeight:700}}>{mlResult.recommendation}</p>
+            </Card>
+          )}
+          <Btn onClick={()=>onNext(mlResult)}>Next: Risk Classification <Icon name="arrow" size={14} color={M.white}/></Btn>
         </div>
       )}
     </div>
@@ -810,66 +933,127 @@ const AIAnalysis:React.FC<{student:Student;onNext:()=>void}>=({student,onNext})=
 };
 
 // ── Risk Classification ────────────────────────────────────────────────────
-const RiskClassification:React.FC<{student:Student;onNext:()=>void}>=({student,onNext})=>(
-  <div style={{padding:"24px 28px",maxWidth:700,margin:"0 auto"}}>
-    <STitle step={5} total={8} title="Risk Classification & XAI" sub="AI-powered risk assessment with explainable AI transparency."/>
-    <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14}}>
-      <div style={{display:"flex",flexDirection:"column",gap:12}}>
-        <Card style={{background:"rgba(184,134,11,0.06)",borderLeft:`3px solid ${M.amber}`}}>
-          <div style={{fontSize:10,color:M.amber,fontWeight:800,textTransform:"uppercase",letterSpacing:1,marginBottom:10,fontFamily:TNR}}>Risk Level</div>
-          <div style={{display:"flex",alignItems:"center",gap:13}}>
-            <div style={{width:48,height:48,borderRadius:14,background:M.amber+"18",display:"flex",alignItems:"center",justifyContent:"center",border:`1.5px solid ${M.amber}30`}}><Icon name="alert" size={26} color={M.amber}/></div>
-            <div>
-              <div style={{fontSize:16,fontWeight:900,color:M.amber,fontFamily:TNR,fontStyle:"italic"}}>MODERATE RISK</div>
-              <div style={{fontSize:11,color:M.g700,marginTop:2,fontFamily:TNR,fontWeight:700}}>Based on cross-subject patterns.</div>
-            </div>
-          </div>
-        </Card>
-        <Card>
-          <div style={{fontSize:12,fontWeight:800,color:M.g800,marginBottom:12,fontFamily:TNR,display:"flex",alignItems:"center",gap:7}}><Icon name="target" size={15} color={M.maroon}/> AI Recommendations</div>
-          {["Structured attention support in Math.","Encourage active participation.","Continue behavioral monitoring.","Parent communication recommended.","Counselor check-in within 1 week."].map((r,i)=>(
-            <div key={i} style={{display:"flex",gap:9,marginBottom:9,fontSize:12.5,fontFamily:TNR}}>
-              <div style={{width:18,height:18,borderRadius:"50%",background:M.maroon+"14",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:1}}><Icon name="check" size={10} color={M.maroon}/></div>
-              <span style={{color:M.g800,fontWeight:700,lineHeight:1.5}}>{r}</span>
-            </div>
-          ))}
-        </Card>
-      </div>
-      <div style={{display:"flex",flexDirection:"column",gap:12}}>
-        <Card>
-          <div style={{fontSize:12,fontWeight:800,color:M.g800,marginBottom:12,fontFamily:TNR,display:"flex",alignItems:"center",gap:7}}><Icon name="eye" size={15} color={M.maroon}/> XAI Explanation</div>
-          <p style={{fontSize:12.5,color:M.g800,lineHeight:1.7,margin:"0 0 14px",fontFamily:TNR,fontWeight:700}}><strong>Moderate Risk</strong> due to repeated inattentive behavior in Math and inconsistent participation patterns.</p>
-          {[{label:"Math Inattentiveness",val:80,color:M.red},{label:"English Engagement",val:75,color:M.maroon},{label:"Science Hyperactivity",val:55,color:M.amber},{label:"Risk Confidence",val:68,color:M.sky}].map(b=>(
-            <div key={b.label} style={{marginBottom:9}}>
-              <div style={{display:"flex",justifyContent:"space-between",fontSize:10.5,marginBottom:4,fontFamily:TNR}}>
-                <span style={{color:M.g700,fontWeight:700}}>{b.label}</span>
-                <span style={{fontWeight:900,color:b.color}}>{b.val}%</span>
+const RiskClassification:React.FC<{student:Student;mlResult:MLResult|null;onNext:()=>void}>=({student,mlResult,onNext})=>{
+  const riskInfo=mlResult?(CATEGORY_RISK[mlResult.category]||{level:"MODERATE RISK",color:M.amber}):{level:"MODERATE RISK",color:M.amber};
+  const catLabel=mlResult?(CATEGORY_LABELS[mlResult.category]||mlResult.category):"Awaiting analysis";
+  // Split recommendation into sentences for bullet-point display
+  const recBullets:string[]=mlResult?.recommendation
+    ? mlResult.recommendation.match(/[^.!?]+[.!?]+/g)?.map(s=>s.trim()).filter(s=>s.length>2)||[mlResult.recommendation]
+    : ["Structured attention support recommended.","Encourage active participation.","Continue behavioral monitoring.","Parent communication recommended.","Counselor check-in within 1 week."];
+
+  return(
+    <div style={{padding:"24px 28px",maxWidth:700,margin:"0 auto"}}>
+      <STitle step={5} total={8} title="Risk Classification & XAI" sub="AI-powered risk assessment with explainable AI transparency."/>
+      <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14}}>
+        <div style={{display:"flex",flexDirection:"column",gap:12}}>
+          {/* Risk Level Card */}
+          <Card style={{background:`${riskInfo.color}08`,borderLeft:`3px solid ${riskInfo.color}`}}>
+            <div style={{fontSize:10,color:riskInfo.color,fontWeight:800,textTransform:"uppercase",letterSpacing:1,marginBottom:10,fontFamily:TNR}}>Risk Level</div>
+            <div style={{display:"flex",alignItems:"center",gap:13}}>
+              <div style={{width:48,height:48,borderRadius:14,background:riskInfo.color+"18",display:"flex",alignItems:"center",justifyContent:"center",border:`1.5px solid ${riskInfo.color}30`,flexShrink:0}}>
+                <Icon name="alert" size={26} color={riskInfo.color}/>
               </div>
-              <PBar val={b.val} color={b.color} h={5}/>
+              <div>
+                <div style={{fontSize:16,fontWeight:900,color:riskInfo.color,fontFamily:TNR,fontStyle:"italic"}}>{riskInfo.level}</div>
+                <div style={{fontSize:11,color:M.g700,marginTop:3,fontFamily:TNR,fontWeight:700,fontStyle:"italic"}}>{catLabel}</div>
+                {mlResult&&<div style={{fontSize:10.5,color:M.g700,marginTop:2,fontFamily:TNR,fontWeight:600}}>Model confidence: {mlResult.confidence.toFixed(1)}%</div>}
+              </div>
             </div>
-          ))}
-        </Card>
-        <Card>
-          <div style={{fontSize:12,fontWeight:800,color:M.g800,marginBottom:10,fontFamily:TNR}}>Escalation History</div>
-          {[{date:"May 10",level:"Low",dot:M.green},{date:"May 17",level:"Moderate",dot:M.amber},{date:"May 24",level:"Moderate",dot:M.amber}].map((h,i)=>(
-            <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",fontSize:12,padding:"7px 0",borderBottom:i<2?"1px solid rgba(0,0,0,0.05)":"none",fontFamily:TNR}}>
-              <span style={{color:M.g700,fontWeight:700}}>{h.date}</span>
-              <div style={{display:"flex",alignItems:"center",gap:6}}><div style={{width:7,height:7,borderRadius:"50%",background:h.dot,boxShadow:`0 0 6px ${h.dot}60`}}/><span style={{color:M.g800,fontWeight:800}}>{h.level}</span></div>
+          </Card>
+          {/* Recommendations */}
+          <Card>
+            <div style={{fontSize:12,fontWeight:800,color:M.g800,marginBottom:12,fontFamily:TNR,display:"flex",alignItems:"center",gap:7}}>
+              <Icon name="target" size={15} color={M.maroon}/> {mlResult?"AI Recommendations":"Default Recommendations"}
+
+
+
             </div>
-          ))}
-        </Card>
+            {recBullets.map((r,i)=>(
+              <div key={i} style={{display:"flex",gap:9,marginBottom:9,fontSize:12.5,fontFamily:TNR}}>
+                <div style={{width:18,height:18,borderRadius:"50%",background:M.maroon+"14",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,marginTop:1}}>
+                  <Icon name="check" size={10} color={M.maroon}/>
+                </div>
+                <span style={{color:M.g800,fontWeight:700,lineHeight:1.5}}>{r}</span>
+
+
+
+
+
+
+              </div>
+            ))}
+          </Card>
+        </div>
+        <div style={{display:"flex",flexDirection:"column",gap:12}}>
+          {/* XAI Explanation */}
+          <Card>
+            <div style={{fontSize:12,fontWeight:800,color:M.g800,marginBottom:12,fontFamily:TNR,display:"flex",alignItems:"center",gap:7}}>
+              <Icon name="eye" size={15} color={M.maroon}/> XAI Explanation
+
+
+            </div>
+            <p style={{fontSize:12.5,color:M.g800,lineHeight:1.7,margin:"0 0 14px",fontFamily:TNR,fontWeight:700}}>
+              <strong>{riskInfo.level}</strong> assigned based on ML prediction of <strong>{catLabel}</strong> for {student.name}.
+            </p>
+            {mlResult?.top3?.length?(
+              mlResult.top3.map(t=>{
+                const ti=CATEGORY_RISK[t.category];
+                return(
+                  <div key={t.category} style={{marginBottom:9}}>
+                    <div style={{display:"flex",justifyContent:"space-between",fontSize:10.5,marginBottom:4,fontFamily:TNR}}>
+                      <span style={{color:M.g700,fontWeight:700}}>{CATEGORY_LABELS[t.category]||t.category}</span>
+                      <span style={{fontWeight:900,color:ti?.color||M.g600}}>{t.confidence.toFixed(1)}%</span>
+                    </div>
+                    <PBar val={t.confidence} color={ti?.color||M.g600} h={5}/>
+                  </div>
+                );
+              })
+            ):(
+              [{label:"Behavior Confidence",val:mlResult?.confidence||68,color:riskInfo.color},{label:"Session Participation",val:(mlResult?mlResult.confidence*0.9:60),color:M.maroon}].map(b=>(
+                <div key={b.label} style={{marginBottom:9}}>
+                  <div style={{display:"flex",justifyContent:"space-between",fontSize:10.5,marginBottom:4,fontFamily:TNR}}>
+                    <span style={{color:M.g700,fontWeight:700}}>{b.label}</span>
+                    <span style={{fontWeight:900,color:b.color}}>{b.val.toFixed(1)}%</span>
+                  </div>
+                  <PBar val={b.val} color={b.color} h={5}/>
+                </div>
+              ))
+            )}
+          </Card>
+          {/* Escalation History */}
+          <Card>
+            <div style={{fontSize:12,fontWeight:800,color:M.g800,marginBottom:10,fontFamily:TNR}}>Session Summary</div>
+            {[
+              {label:"Risk Classification",val:riskInfo.level,dot:riskInfo.color},
+              {label:"Category",val:catLabel,dot:M.maroon},
+              {label:"Confidence",val:mlResult?`${mlResult.confidence.toFixed(1)}%`:"—",dot:M.sky},
+            ].map((h,i)=>(
+              <div key={i} style={{display:"flex",justifyContent:"space-between",alignItems:"center",fontSize:12,padding:"7px 0",borderBottom:i<2?"1px solid rgba(0,0,0,0.05)":"none",fontFamily:TNR}}>
+                <span style={{color:M.g700,fontWeight:700}}>{h.label}</span>
+                <div style={{display:"flex",alignItems:"center",gap:6}}>
+                  <div style={{width:7,height:7,borderRadius:"50%",background:h.dot,boxShadow:`0 0 6px ${h.dot}60`}}/>
+                  <span style={{color:M.g800,fontWeight:800,fontSize:11}}>{h.val}</span>
+                </div>
+              </div>
+            ))}
+          </Card>
+        </div>
       </div>
+      <Btn onClick={onNext}>Next: Notifications <Icon name="arrow" size={14} color={M.white}/></Btn>
     </div>
-    <Btn onClick={onNext}>Next: Notifications <Icon name="arrow" size={14} color={M.white}/></Btn>
-  </div>
-);
+  );
+};
 
 // ── Notifications ──────────────────────────────────────────────────────────
-const Notifications:React.FC<{student:Student;onNext:()=>void}>=({student,onNext})=>{
+const Notifications:React.FC<{student:Student;mlResult:MLResult|null;onNext:()=>void}>=({student,mlResult,onNext})=>{
+  const riskInfo=mlResult?(CATEGORY_RISK[mlResult.category]||{level:"MODERATE RISK",color:M.amber}):{level:"MODERATE RISK",color:M.amber};
+  const catLabel=mlResult?(CATEGORY_LABELS[mlResult.category]||mlResult.category):"behavioral concern";
+  const isUrgent=mlResult&&["URGENT_SELF_HARM","PHYSICAL_AGGRESSION","BEHAVIORAL_FRUSTRATED","BEHAVIORAL_ANXIOUS","BEHAVIORAL_SAD"].includes(mlResult.category);
+  const firstSentence=mlResult?.recommendation?.match(/[^.!?]+[.!?]/)?.[0]||"Behavioral concern detected requiring follow-up.";
   const nots=[
-    {icon:"users" as IName,title:"Parent Notification",to:`${student.name}'s Parent/Guardian`,reason:"Repeated inattentive behavior in Math. Moderate risk assigned.",time:"10:45 AM"},
-    {icon:"home" as IName,title:"Admin / Principal",to:"School Administrator",reason:"Moderate behavioral risk detected for Grade 7 Section 3-F student.",time:"10:45 AM"},
-    {icon:"shield" as IName,title:"Guidance Counselor",to:"School Guidance Office",reason:"Student flagged for monitoring. Counseling session recommended within 7 days.",time:"10:46 AM"},
+    {icon:"users" as IName,title:"Parent Notification",to:`${student.name}'s Parent/Guardian`,reason:`${firstSentence} ${riskInfo.level} assigned.`,time:"10:45 AM"},
+    {icon:"home" as IName,title:"Admin / Principal",to:"School Administrator",reason:`${riskInfo.level} detected for ${student.name} — Category: ${catLabel}.`,time:"10:45 AM"},
+    {icon:"shield" as IName,title:"Guidance Counselor",to:"School Guidance Office",reason:`${student.name} flagged for ${catLabel}. ${isUrgent?"Immediate":"Routine"} counseling session recommended.`,time:"10:46 AM"},
   ];
   return(
     <div style={{padding:"24px 28px",maxWidth:540,margin:"0 auto"}}>
@@ -1168,6 +1352,7 @@ const TeacherHome:React.FC=()=>{
   const [step,setStep]=useState(1);
   const [student,setStudent]=useState<Student|null>(null);
   const [logData,setLogData]=useState<LogState|null>(null);
+  const [mlResult,setMlResult]=useState<MLResult|null>(null);
 
   // Check if the device is mobile based on screen width
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
@@ -1182,6 +1367,7 @@ const TeacherHome:React.FC=()=>{
 
   const go=(v:string,s=1)=>{setView(v);setStep(s);};
   const handleLogout=()=>{setUser(null);navigate("/");};
+  const handleReset=()=>{setView("dashboard");setStudent(null);setLogData(null);setMlResult(null);};
 
   // If mobile is detected, render the mobile-optimized component
   if (isMobile) return <TeacherMobile />;
@@ -1211,11 +1397,11 @@ const TeacherHome:React.FC=()=>{
           {view==="session"&&student&&<SelectSession student={student} onContinue={()=>go("activity-log",2)}/>}
           {view==="activity-log"&&student&&<ActivityLog student={student} onSave={state=>{setLogData(state);go("save-confirm",3);}}/>}
           {view==="save-confirm"&&student&&<SaveConfirmation student={student} onProceed={()=>go("ai-analysis",4)}/>}
-          {view==="ai-analysis"&&student&&<AIAnalysis student={student} onNext={()=>go("risk",5)}/>}
-          {view==="risk"&&student&&<RiskClassification student={student} onNext={()=>go("notifications",6)}/>}
-          {view==="notifications"&&student&&<Notifications student={student} onNext={()=>go("analytics",7)}/>}
+          {view==="ai-analysis"&&student&&<AIAnalysis student={student} logData={logData} onNext={r=>{setMlResult(r);go("risk",5);}}/>}
+          {view==="risk"&&student&&<RiskClassification student={student} mlResult={mlResult} onNext={()=>go("notifications",6)}/>}
+          {view==="notifications"&&student&&<Notifications student={student} mlResult={mlResult} onNext={()=>go("analytics",7)}/>}
           {view==="analytics"&&student&&<Analytics student={student} onNext={()=>go("reports",8)}/>}
-          {view==="reports"&&student&&<Reports student={student} logData={logData} onFinish={()=>{setView("dashboard");setStudent(null);setLogData(null);}}/>}
+          {view==="reports"&&student&&<Reports student={student} logData={logData} onFinish={handleReset}/>}
         </div>
       </div>
     </>

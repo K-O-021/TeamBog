@@ -8,19 +8,93 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.multioutput import MultiOutputClassifier
 from sklearn.pipeline import Pipeline
 from sklearn.ensemble import IsolationForest
+from sklearn.preprocessing import MultiLabelBinarizer
 import os
+import sys
+import pickle
+import json
 import numpy as np
+
+# This is where the supervised learning ML model getting the path
+ML_MODEL_DIR = os.path.dirname(__file__)
+sys.path.insert(0, ML_MODEL_DIR)
+
+try:
+    from recommend import build_recommendation as _build_recommendation
+    _RECOMMEND_AVAILABLE = True
+except ImportError:
+    _RECOMMEND_AVAILABLE = False
+
+# MultiLabelEncoder must be defined here so pickle can deserialize stored encoders
+class MultiLabelEncoder:
+    def __init__(self, classes):
+        self.classes = classes
+        self.mlb = MultiLabelBinarizer(classes=classes)
+
+    def fit_transform(self, series):
+        return self.mlb.fit_transform(series)
+
+    def transform(self, series):
+        return self.mlb.transform(series)
+
+    @property
+    def feature_names(self):
+        return list(self.mlb.classes_)
+
+_ML_ARTIFACTS = None
+
+class _FixedUnpickler(pickle.Unpickler):
+    """Resolves MultiLabelEncoder regardless of the module it was pickled from."""
+    def find_class(self, module, name):
+        if name == "MultiLabelEncoder":
+            return MultiLabelEncoder
+        return super().find_class(module, name)
+
+def _load_pickle(path):
+    with open(path, "rb") as f:
+        return _FixedUnpickler(f).load()
+
+def _get_ml_artifacts():
+    global _ML_ARTIFACTS
+    if _ML_ARTIFACTS is not None:
+        return _ML_ARTIFACTS
+    model_dir = os.path.join(ML_MODEL_DIR, "ml_model")
+    ml_model = _load_pickle(os.path.join(model_dir, "model.pkl"))
+    le       = _load_pickle(os.path.join(model_dir, "label_encoder.pkl"))
+    encoders = _load_pickle(os.path.join(model_dir, "feature_encoders.pkl"))
+    with open(os.path.join(model_dir, "meta.json"), "r") as f:
+        meta = json.load(f)
+    _ML_ARTIFACTS = (ml_model, le, encoders, meta)
+    return _ML_ARTIFACTS
+
+_MULTI_SELECT_COLS = ["interventions_applied", "positive_indicators", "negative_indicators"]
+
+def _build_features(df, encoders):
+    parts = [df[["participation_level"]].values.astype(float)]
+    parts.append(encoders["ohe_mood"].transform(df[["mood"]].values))
+    parts.append(encoders["ohe_incident"].transform(df[["incident_report"]].values))
+    for col, enc in encoders["mlb_map"].items():
+        parts.append(enc.transform(df[col]))
+    parts.append(encoders["tfidf_obs"].transform(df["observation_text"]).toarray())
+    parts.append(encoders["tfidf_remark"].transform(df["teacher_remarks"]).toarray())
+    return np.hstack(parts).astype(float)
 
 app = FastAPI(title="SNED Behavior AI Service")
 
-# Enable CORS so your Vite frontend (port 8080) can access this API
+# Enable the CORS so the Vite frontend (port 8000) can access this API
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8080", "http://0.0.0.0:8080"],
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Pre load the SVM model at startup so the first request is not slow
+try:
+    _get_ml_artifacts()
+except Exception as _e:
+    print(f"⚠  AI model failed to load: {_e}")
 
 MODEL_FILE = "behavior_model.pkl"
 
@@ -134,8 +208,7 @@ async def calculate_class_volatility(request: ClassVolatilityRequest):
 
 @app.post("/api/predict-risk", response_model=PredictRiskResponse)
 async def predict_risk(request: PredictRiskRequest):
-    # In a production scenario, you would pass these logs into an LSTM or Facebook Prophet model.
-    # Here we simulate the output of a Time-Series trend analysis.
+    # This is just the  placeholder output of a Time-Series trend analysis.
     return {
         "forecast": [
             {"day": "Mon", "riskScore": 25},
@@ -147,6 +220,71 @@ async def predict_risk(request: PredictRiskRequest):
         "alert": "Pattern alert: High-risk behavior trends detected for Thursday afternoons.",
         "early_intervention_advice": "Based on patterns, high-risk behavior is likely tomorrow afternoon. Suggest scheduled sensory breaks at 1:30 PM."
     }
+
+class MLRecommendRequest(BaseModel):
+    student_name: str = ""
+    subject: str = "Mathematics"
+    observation_text: str
+    mood: str
+    participation_level: int
+    incident_report: str
+    interventions_applied: list[str] = []
+    positive_indicators: list[str] = []
+    negative_indicators: list[str] = []
+    teacher_remarks: str = ""
+
+class MLTop3Item(BaseModel):
+    category: str
+    confidence: float
+
+class MLRecommendResponse(BaseModel):
+    category: str
+    confidence: float
+    recommendation: str
+    top3: list[MLTop3Item]
+
+@app.post("/api/ml-recommend", response_model=MLRecommendResponse)
+def ml_recommend(request: MLRecommendRequest):
+    try:
+        ml_model, le, encoders, _ = _get_ml_artifacts()
+
+        row = {
+            "observation_text": request.observation_text or "",
+            "mood": request.mood,
+            "participation_level": int(request.participation_level),
+            "incident_report": request.incident_report,
+            "interventions_applied": tuple(request.interventions_applied),
+            "positive_indicators": tuple(request.positive_indicators),
+            "negative_indicators": tuple(request.negative_indicators),
+            "teacher_remarks": request.teacher_remarks or "",
+        }
+
+        df_single = pd.DataFrame([row])
+        df_single["participation_level"] = df_single["participation_level"].astype(int)
+
+        X = _build_features(df_single, encoders)
+        pred_idx = ml_model.predict(X)[0]
+        pred_label = le.inverse_transform([pred_idx])[0]
+
+        proba = ml_model.predict_proba(X)[0] if hasattr(ml_model, "predict_proba") else None
+        confidence = round(float(proba[pred_idx]) * 100, 1) if proba is not None else 0.0
+
+        top3 = []
+        if proba is not None:
+            for idx, prob in sorted(enumerate(proba), key=lambda x: -x[1])[:3]:
+                top3.append({"category": le.inverse_transform([idx])[0], "confidence": round(float(prob) * 100, 1)})
+
+        inputs = {"student_name": request.student_name, "subject": request.subject, **row}
+        if _RECOMMEND_AVAILABLE:
+            recommendation = _build_recommendation(pred_label, inputs)
+        else:
+            recommendation = f"{request.student_name or 'The student'} requires follow-up based on today's session."
+
+        return {"category": pred_label, "confidence": confidence, "recommendation": recommendation, "top3": top3}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.post("/api/get-recommendations", response_model=RecommendationResponse)
 async def get_recommendations(request: RecommendationRequest):

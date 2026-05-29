@@ -460,18 +460,34 @@ export const AppProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  const deleteStudent = async (id: string) => {
-    // Assuming deleteStudent means archive in this context, as per previous discussions
-    // If it's a hard delete, you'd need a firestore function for that.
+  const archiveStudent = async (id: string) => {
     const student = studentList.find(s => s.id === id);
     try {
-      await firestoreArchiveStudent(id); // Soft delete by archiving
+      await firestoreArchiveStudent(id);
       toast.success(`Student ${student?.name} archived.`);
     } catch (error) {
       console.error("Error archiving student:", error);
       toast.error("Failed to archive student.");
     }
-    addActivityLog({ // This should be a Firestore call as well
+    addActivityLog({
+      userId: user?.id || 'system',
+      userName: user?.name || 'System',
+      action: 'Archived Student',
+      target: student?.name || id,
+      timestamp: new Date().toISOString()
+    });
+  };
+
+  const deleteStudent = async (id: string) => {
+    const student = studentList.find(s => s.id === id);
+    try {
+      await firestoreArchiveStudent(id);
+      toast.success(`Student ${student?.name} archived.`);
+    } catch (error) {
+      console.error("Error archiving student:", error);
+      toast.error("Failed to archive student.");
+    }
+    addActivityLog({
       userId: user?.id || 'system',
       userName: user?.name || 'System',
       action: 'Permanently Deleted Student',

@@ -1,0 +1,42 @@
+{
+  "model_name": "SVM",
+  "test_accuracy": 0.9955,
+  "test_precision": 0.9957,
+  "test_recall": 0.9955,
+  "test_f1": 0.9953,
+  "n_features": 153,
+  "n_classes": 14,
+  "classes": [
+    "ANXIETY_SUPPORT",
+    "BEHAVIORAL_ANXIOUS",
+    "BEHAVIORAL_FATIGUED",
+    "BEHAVIORAL_FRUSTRATED",
+    "BEHAVIORAL_SAD",
+    "EMOTIONAL_SUPPORT_SAD",
+    "ENTHUSIASM_MANAGEMENT",
+    "EXCELLENT_PERFORMANCE",
+    "FATIGUE_SUPPORT",
+    "FRUSTRATION_HIGH_PARTICIPATION",
+    "FRUSTRATION_LOW_PARTICIPATION",
+    "GENERAL_MIXED",
+    "PHYSICAL_AGGRESSION",
+    "URGENT_SELF_HARM"
+  ],
+  "categorical_cols": [
+    "mood",
+    "incident_report"
+  ],
+  "numeric_cols": [
+    "participation_level"
+  ],
+  "multi_select_cols": [
+    "interventions_applied",
+    "positive_indicators",
+    "negative_indicators"
+  ],
+  "text_cols": [
+    "observation_text",
+    "teacher_remarks"
+  ],
+  "target_col": "recommendation_category"
+}
